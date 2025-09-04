@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypePrism from 'rehype-prism-plus';
 import React, { useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -24,11 +25,11 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
   const getStatusIcon = () => {
     switch (message.status) {
       case 'sending':
-        return <Check className="w-4 h-4 text-gray-400" />;
+        return <Check className="w-4 h-4 text-muted-foreground" />;
       case 'sent':
-        return <CheckCheck className="w-4 h-4 text-blue-400" />;
+        return <CheckCheck className="w-4 h-4 text-primary" />;
       case 'error':
-        return <AlertCircle className="w-4 h-4 text-red-400" />;
+        return <AlertCircle className="w-4 h-4 text-destructive" />;
       default:
         return null;
     }
@@ -48,13 +49,18 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
   );
 
   return (
-    <div className={cn('flex items-start gap-4 w-full', isUser ? 'justify-end' : 'justify-start')}>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className={cn('flex items-start gap-4 w-full', isUser ? 'justify-end' : 'justify-start')}
+    >
       {!isUser && avatar}
       <div className={cn(
         'relative max-w-xl min-w-[120px] rounded-xl p-4 shadow-md',
         isUser
-          ? 'bg-gray-700 text-white'
-          : 'bg-gray-800 text-white',
+          ? 'bg-primary text-primary-foreground'
+          : 'bg-card text-card-foreground',
         isError && !isUser && 'bg-destructive text-destructive-foreground'
       )}>
         {/* Increased bottom padding to pb-8 to prevent text overlap */}
@@ -62,7 +68,7 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
 
         <div className={cn(
           'text-sm leading-relaxed',
-          isUser ? 'text-white' : 'text-white',
+          isUser ? 'text-primary-foreground' : 'text-card-foreground',
           isError && !isUser && 'text-destructive-foreground'
         )}>
           <ReactMarkdown
@@ -93,7 +99,7 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
                     </pre>
                     <button
                       onClick={onCopy}
-                      className="absolute top-2 right-2 p-1 rounded-md bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-200 opacity-0 group-hover:opacity-100"
+                      className="absolute top-2 right-2 p-1 rounded-md bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 opacity-0 group-hover:opacity-100"
                       title="Копировать код"
                       aria-label="Копировать код"
                     >
@@ -139,7 +145,7 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
             {onRepeatMessage && (
               <button
                 onClick={() => onRepeatMessage(message.id)}
-                className="p-1 rounded-md bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-200"
+                className="p-1 rounded-md bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
                 title="Повторить сообщение"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -148,7 +154,7 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
             {onEditMessage && (
               <button
                 onClick={() => onEditMessage(message.id)}
-                className="p-1 rounded-md bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-200"
+                className="p-1 rounded-md bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200"
                 title="Редактировать сообщение"
               >
                 <Edit className="w-4 h-4" />
@@ -163,6 +169,6 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

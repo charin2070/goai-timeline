@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/tabs"
 import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 interface CenterPanelProps {
   setPamlPrompt: (prompt: string) => void;
@@ -122,11 +123,13 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
   };
 
   return (
-    <div className="flex flex-col h-full p-4 bg-gray-800/50">
+    <div className="flex flex-col h-full p-4 bg-background">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Анализ лога</h2>
+        <h2 className="text-lg font-semibold">Оптимизация</h2>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setIsOptimized(!isOptimized)}>{isOptimized ? 'Показать все' : 'Оптимизировать'}</Button>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button onClick={() => setIsOptimized(!isOptimized)}>{isOptimized ? 'Показать все' : 'Оптимизировать'}</Button>
+          </motion.div>
         </div>
       </div>
       <Tabs defaultValue="logContent" className="flex flex-col flex-1">
@@ -140,7 +143,7 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
           </TabsTrigger>
           <TabsTrigger value="systemPrompt">Системный промпт</TabsTrigger>
         </TabsList>
-        <TabsContent value="logContent" className="flex-1 overflow-y-auto bg-gray-900 rounded-lg">
+        <TabsContent value="logContent" className="flex-1 overflow-y-auto bg-card rounded-lg">
           {selectedFile ? (
             <SyntaxHighlighter 
               language={getLanguage(selectedFile.name)} 
@@ -148,25 +151,26 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
               customStyle={{ background: 'transparent', width: '100%', textShadow: 'none' }}
               wrapLines={true}
               wrapLongLines={true}
+              className="overflow-y-auto"
             >
               {displayedContent}
             </SyntaxHighlighter>
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="flex items-center justify-center h-full text-muted-foreground">
               <p>Выберите файл для просмотра</p>
             </div>
           )}
         </TabsContent>
-        <TabsContent value="pamlPrompt" className="flex-1 overflow-y-auto bg-gray-900 rounded-lg p-4">
+        <TabsContent value="pamlPrompt" className="flex-1 overflow-y-auto bg-card rounded-lg p-4 min-h-0">
           <textarea
-            className="w-full h-full bg-transparent text-white focus:outline-none resize-none"
+            className="w-full h-full bg-transparent text-foreground focus:outline-none resize-none overflow-y-auto"
             readOnly
             value={generatePAMLPrompt()}
           />
         </TabsContent>
-        <TabsContent value="systemPrompt" className="flex-1 overflow-y-auto bg-gray-900 rounded-lg p-4">
+        <TabsContent value="systemPrompt" className="flex-1 overflow-y-auto bg-card rounded-lg p-4 min-h-0">
           <textarea
-            className="w-full h-full bg-transparent text-white focus:outline-none resize-none"
+            className="w-full h-full bg-transparent text-foreground focus:outline-none resize-none overflow-y-auto"
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
           />

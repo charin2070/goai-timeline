@@ -62,7 +62,7 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
           ref={textareaRef}
           dir="auto"
           aria-label="Опишите детали..."
-          className="w-full px-3 pr-4 pt-5 bg-gray-800 border border-gray-600 rounded-xl focus:outline-none text-gray-200 align-bottom resize-none text-sm"
+          className="w-full px-3 pr-4 pt-5 bg-input border border-border rounded-xl focus:outline-none text-foreground align-bottom resize-none text-sm"
           style={{ maxHeight: "200px" }}
           rows={1}
           value={inputValue}
@@ -76,9 +76,9 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
           <AttachDropdown
             onLogFileUpload={onLogFileUpload}
             onChatFileUpload={onChatFileUpload}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           />
-          <Button variant="ghost" size="icon" onClick={onClearChat} className="text-gray-400 hover:text-white">
+          <Button variant="ghost" size="icon" onClick={onClearChat} className="text-muted-foreground hover:text-foreground">
             <Trash2 className="w-4 h-4" />
           </Button>
           <AiProviderDropdown
@@ -96,7 +96,7 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
             width="36px"
             height="36px"
             bgColor="transparent"
-            textColor="gray-200"
+            textColor="foreground"
             icon={Send}
             iconWidth="46px"
             iconHeight="46px"

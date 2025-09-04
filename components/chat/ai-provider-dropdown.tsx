@@ -99,7 +99,10 @@ export function AiProviderDropdown({
             {availableProviders.map((provider) => (
               <DropdownMenuItem key={provider.id} onSelect={() => onProviderChange(provider.id as AIProvider)}>
                 <motion.div variants={itemVariants} className="flex items-center justify-between w-full">
-                  <span>{provider.name}</span>
+                  <div className="flex items-center">
+                    {getProviderIcon(provider.id as AIProvider)}
+                    <span className="ml-2">{provider.name}</span>
+                  </div>
                   {showStatus && <Badge variant={getProviderStatus(provider.id as AIProvider).variant}>{getProviderStatus(provider.id as AIProvider).text}</Badge>}
                 </motion.div>
               </DropdownMenuItem>

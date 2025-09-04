@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
-import { TetrisSpinner } from '@/components/ui/tetris-spinner';
+import { TypingDots } from '@/components/ui/typing-dots';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -30,8 +30,8 @@ export function MessageList({ messages, isTyping, onRepeatMessage, onEditMessage
   }, [messages, isTyping]);
 
   return (
-    <ScrollArea ref={scrollAreaRef} className="flex-1">
-      <div className="max-w-4xl mx-auto">
+    <ScrollArea ref={scrollAreaRef} className="flex-1 overflow-y-auto">
+      <div className="h-full">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4 py-24">
             <p className="text-muted-foreground text-lg font-light">
@@ -54,7 +54,7 @@ export function MessageList({ messages, isTyping, onRepeatMessage, onEditMessage
         
         {isTyping && (
           <div className="flex justify-center py-6">
-            <TetrisSpinner />
+            <TypingDots />
           </div>
         )}
       </div>

@@ -10,9 +10,10 @@ interface SidebarProps {
   onNewChat: () => void;
   selectedProvider: AIProvider;
   onProviderChange: (provider: AIProvider) => void;
+  availableProviders: AIProvider[];
 }
 
-export function Sidebar({ onNewChat, selectedProvider, onProviderChange }: SidebarProps) {
+export function Sidebar({ onNewChat, selectedProvider, onProviderChange, availableProviders }: SidebarProps) {
   return (
     <div className="chatgpt-sidebar flex flex-col h-full">
       {/* New Chat Button */}
@@ -25,6 +26,7 @@ export function Sidebar({ onNewChat, selectedProvider, onProviderChange }: Sideb
         <AiProviderDropdown
           selectedProvider={selectedProvider}
           onProviderChange={onProviderChange}
+          availableProviders={availableProviders}
         />
       </div>
 

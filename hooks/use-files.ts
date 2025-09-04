@@ -20,7 +20,7 @@ export function useFiles() {
       ...file,
       os: 'Linux', // Default OS
       app: '.NET application', // Default App
-      server: 'Frontend' // Default Server
+      server: 'Backend' // Default Server
     };
     setFiles(prev => [...prev, newFile]);
   }, []);

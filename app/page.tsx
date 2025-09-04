@@ -16,6 +16,7 @@ import { LeftPanel } from '@/components/chat/left-panel';
 import { CenterPanel } from '@/components/chat/center-panel';
 import { RightPanel } from '@/components/chat/right-panel';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 function ChatContent() {
   const { session, status, isLoading } = useAuth();
@@ -47,23 +48,29 @@ function ChatContent() {
       <div className="flex h-screen flex-col bg-background text-foreground">
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={20}>
-            <LeftPanel />
+            <motion.div initial={{ x: -200, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, ease: "easeInOut" }}>
+              <LeftPanel />
+            </motion.div>
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={40}>
-            <CenterPanel setPamlPrompt={setPamlPrompt} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2, ease: "easeInOut" }}>
+              <CenterPanel setPamlPrompt={setPamlPrompt} />
+            </motion.div>
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={40}>
-            <RightPanel 
-              messages={messages}
-              isTyping={chatLoading}
-              onRepeatMessage={repeatMessage}
-              editMessage={editMessage}
-              onSendMessage={sendMessage}
-              onClearChat={clearChat}
-              initialPrompt={pamlPrompt}
-            />
+            <motion.div initial={{ x: 200, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, ease: "easeInOut" }}>
+              <RightPanel 
+                messages={messages}
+                isTyping={chatLoading}
+                onRepeatMessage={repeatMessage}
+                editMessage={editMessage}
+                onSendMessage={sendMessage}
+                onClearChat={clearChat}
+                initialPrompt={pamlPrompt}
+              />
+            </motion.div>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

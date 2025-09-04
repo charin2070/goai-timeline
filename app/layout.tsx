@@ -2,6 +2,7 @@ import './globals.css';
 import 'prism-themes/themes/prism-vsc-dark-plus.css';
 import type { Metadata } from 'next';
 import { Providers } from '@/components/providers';
+import { ThemeProvider } from '@/lib/theme-context';
 
 export const metadata: Metadata = {
   title: 'GoAI - Инциденты',
@@ -23,10 +24,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body className="h-full antialiased bg-gray-900">
-        <Providers>
-          {children}
-        </Providers>
+      <body className="h-full antialiased">
+        <ThemeProvider>
+          <Providers>
+            {children}
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

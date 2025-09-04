@@ -3,7 +3,9 @@
 import { useRef } from 'react';
 import { useFileContext } from '@/lib/file-context';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, X, FileText, Image, Music } from 'lucide-react';
+import {
+  PlusCircle, X, FileText, Image, Music, Terminal, AppWindow, Apple, Smartphone, Code, Server, Database, User, Globe, Monitor
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getFileType } from '@/lib/utils';
 import {
@@ -75,7 +77,7 @@ export function FileSidebar() {
   };
 
   return (
-    <div className="flex flex-col h-full p-4 bg-gray-800/50">
+    <div className="flex flex-col h-full p-4 bg-background">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Файлы</h2>
         <motion.div whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}>
@@ -100,7 +102,7 @@ export function FileSidebar() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                className="flex flex-col items-start p-2 rounded-lg mb-2 bg-gray-700/50"
+                className="flex flex-col items-start p-2 rounded-lg mb-2 bg-card"
               >
                 <div className="flex items-center justify-between w-full">
                   <Button
@@ -124,12 +126,12 @@ export function FileSidebar() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent asChild>
                       <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden">
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'Linux' })}><motion.div variants={itemVariants}>Linux</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'Windows' })}><motion.div variants={itemVariants}>Windows</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'MacOS' })}><motion.div variants={itemVariants}>MacOS</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'Linux' })}><motion.div variants={itemVariants} className="flex items-center"><Terminal className="w-4 h-4 mr-2"/>Linux</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'Windows' })}><motion.div variants={itemVariants} className="flex items-center"><AppWindow className="w-4 h-4 mr-2"/>Windows</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'MacOS' })}><motion.div variants={itemVariants} className="flex items-center"><Apple className="w-4 h-4 mr-2"/>MacOS</motion.div></DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'Android' })}><motion.div variants={itemVariants}>Android</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'iOS' })}><motion.div variants={itemVariants}>iOS</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'Android' })}><motion.div variants={itemVariants} className="flex items-center"><Smartphone className="w-4 h-4 mr-2"/>Android</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'iOS' })}><motion.div variants={itemVariants} className="flex items-center"><Smartphone className="w-4 h-4 mr-2"/>iOS</motion.div></DropdownMenuItem>
                       </motion.div>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -139,12 +141,12 @@ export function FileSidebar() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent asChild>
                       <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden">
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: '.NET application' })}><motion.div variants={itemVariants}>.NET application</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'JAVA application' })}><motion.div variants={itemVariants}>JAVA application</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'C++ application' })}><motion.div variants={itemVariants}>C++ application</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: '.NET application' })}><motion.div variants={itemVariants} className="flex items-center"><Code className="w-4 h-4 mr-2"/>.NET application</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'JAVA application' })}><motion.div variants={itemVariants} className="flex items-center"><Code className="w-4 h-4 mr-2"/>JAVA application</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'C++ application' })}><motion.div variants={itemVariants} className="flex items-center"><Code className="w-4 h-4 mr-2"/>C++ application</motion.div></DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'nGinx' })}><motion.div variants={itemVariants}>nGinx</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'IIS' })}><motion.div variants={itemVariants}>IIS</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'nGinx' })}><motion.div variants={itemVariants} className="flex items-center"><Server className="w-4 h-4 mr-2"/>nGinx</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'IIS' })}><motion.div variants={itemVariants} className="flex items-center"><Server className="w-4 h-4 mr-2"/>IIS</motion.div></DropdownMenuItem>
                       </motion.div>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -154,12 +156,12 @@ export function FileSidebar() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent asChild>
                       <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden">
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Frontend' })}><motion.div variants={itemVariants}>Frontend</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Middle' })}><motion.div variants={itemVariants}>Middle</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Backend' })}><motion.div variants={itemVariants}>Backend</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'DB' })}><motion.div variants={itemVariants}>DB</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Client' })}><motion.div variants={itemVariants}>Client</motion.div></DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'External service' })}><motion.div variants={itemVariants}>External service</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Frontend' })}><motion.div variants={itemVariants} className="flex items-center"><Monitor className="w-4 h-4 mr-2"/>Frontend</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Middle' })}><motion.div variants={itemVariants} className="flex items-center"><Server className="w-4 h-4 mr-2"/>Middle</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Backend' })}><motion.div variants={itemVariants} className="flex items-center"><Server className="w-4 h-4 mr-2"/>Backend</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'DB' })}><motion.div variants={itemVariants} className="flex items-center"><Database className="w-4 h-4 mr-2"/>DB</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Client' })}><motion.div variants={itemVariants} className="flex items-center"><User className="w-4 h-4 mr-2"/>Client</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'External service' })}><motion.div variants={itemVariants} className="flex items-center"><Globe className="w-4 h-4 mr-2"/>External service</motion.div></DropdownMenuItem>
                       </motion.div>
                     </DropdownMenuContent>
                   </DropdownMenu>

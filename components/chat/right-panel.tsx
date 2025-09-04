@@ -5,6 +5,7 @@ import { MessageList } from './message-list';
 import QueryPanel, { QueryPanelRef } from './query-panel';
 import { ChatMessage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 interface RightPanelProps {
   messages: ChatMessage[];
@@ -47,7 +48,7 @@ export function RightPanel({
   };
 
   return (
-    <div className="flex flex-col h-full p-4 bg-gray-800/50">
+    <div className="flex flex-col h-full p-4 bg-background">
       <h2 className="text-lg font-semibold mb-4">Анализ</h2>
       <div className="flex-1 flex flex-col min-h-0">
         <MessageList 
@@ -58,7 +59,9 @@ export function RightPanel({
         />
       </div>
       <div className="mt-4">
-        <Button onClick={handleSendPrompt} className="w-full mb-2">Анализировать</Button>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button onClick={handleSendPrompt} className="w-full mb-2">Анализировать</Button>
+        </motion.div>
         <QueryPanel 
           ref={queryPanelRef}
           onSendMessage={onSendMessage} 

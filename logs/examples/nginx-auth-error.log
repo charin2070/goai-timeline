@@ -1,0 +1,6 @@
+192.168.1.10 - user_attempt [04/Sep/2025:15:30:01 +0000] "POST /login HTTP/1.1" 401 150 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"
+192.168.1.11 - - [04/Sep/2025:15:30:05 +0000] "GET /index.html HTTP/1.1" 200 1234 "http://example.com/" "Mozilla/5.0"
+192.168.1.10 - user_attempt [04/Sep/2025:15:30:10 +0000] "POST /login HTTP/1.1" 401 150 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"
+192.168.1.12 - admin [04/Sep/2025:15:30:15 +0000] "GET /dashboard HTTP/1.1" 200 5678 "http://example.com/login" "Mozilla/5.0"
+192.168.1.10 - user_attempt [04/Sep/2025:15:30:20 +0000] "POST /login HTTP/1.1" 401 150 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36"
+2025/09/04 15:30:20 [error] 12345#0: *12345 user "user_attempt" was not found in "/etc/nginx/htpasswd": "/etc/nginx/htpasswd", client: 192.168.1.10, server: example.com, request: "POST /login HTTP/1.1", host: "example.com"

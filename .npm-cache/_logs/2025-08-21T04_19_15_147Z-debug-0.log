@@ -1,0 +1,25 @@
+0 verbose cli F:\Program Files\nodejs\node.exe F:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.9.2
+2 info using node@v22.16.0
+3 silly config load:file:F:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:f:\res\dev\GoAI Timeline\.npmrc
+5 silly config load:file:F:\Users\Admin\.npmrc
+6 silly config load:file:F:\Users\Admin\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm view @radix-ui/react-alert-dialog description dist-tags.latest homepage version time
+8 verbose argv "view" "--json" "--" "@radix-ui/react-alert-dialog" "description" "dist-tags.latest" "homepage" "version" "time"
+9 verbose logfile logs-max:10 dir:f:\res\dev\GoAI Timeline\.npm-cache\_logs\2025-08-21T04_19_15_147Z-
+10 verbose logfile f:\res\dev\GoAI Timeline\.npm-cache\_logs\2025-08-21T04_19_15_147Z-debug-0.log
+11 silly logfile done cleaning log files
+12 http fetch GET 200 https://registry.npmjs.org/npm 1724ms
+13 http fetch GET 200 https://registry.npmjs.org/@radix-ui%2freact-alert-dialog 3972ms (cache miss)
+14 verbose cwd f:\res\dev\GoAI Timeline
+15 verbose os Windows_NT 10.0.26100
+16 verbose node v22.16.0
+17 verbose npm  v10.9.2
+18 notice
+18 notice New major version of npm available! 10.9.2 -> 11.5.2
+18 notice Changelog: https://github.com/npm/cli/releases/tag/v11.5.2
+18 notice To update run: npm install -g npm@11.5.2
+18 notice  { force: true, [Symbol(proc-log.meta)]: true }
+19 verbose exit 0
+20 info ok

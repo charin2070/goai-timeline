@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { ChatMessage } from '@/lib/types';
-import { useAiProvider } from './use-ai-provider';
+import { useAIProviderContext } from '@/lib/ai-provider-context';
 import { toast } from 'sonner';
 
 export function useChat() {
@@ -15,7 +15,7 @@ export function useChat() {
     changeProvider,
     getCurrentProvider,
     isLoading: isProviderLoading
-  } = useAiProvider('google-gemma');
+  } = useAIProviderContext();
 
   const sendMessage = useCallback(async (content: string) => {
     // retryCount нужен для контроля количества повторов

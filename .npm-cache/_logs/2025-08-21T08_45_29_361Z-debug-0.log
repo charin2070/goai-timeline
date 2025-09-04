@@ -1,0 +1,11 @@
+0 verbose cli F:\Program Files\nodejs\node.exe F:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.9.2
+2 info using node@v22.16.0
+3 silly config load:file:F:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:F:\res\dev\GoAI Timeline\.npmrc
+5 silly config load:file:F:\Users\Admin\.npmrc
+6 silly config load:file:F:\Users\Admin\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm install
+8 verbose argv "install"
+9 verbose logfile logs-max:10 dir:F:\res\dev\GoAI Timeline\.npm-cache\_logs\2025-08-21T08_45_29_361Z-
+10 verbose logfile F:\res\dev\GoAI Timeline\.npm-cache\_logs\2025-08-21T08_45_29_361Z-debug-0.log

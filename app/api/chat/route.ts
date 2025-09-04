@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { sendMessageToProvider, parseStreamChunk } from '@/lib/openrouter';
-import { sendMessageToMistral, parseMistralStreamChunk } from '@/lib/mistral';
+import { sendMessageToGigaChat, parseGigaChatStreamChunk } from '@/lib/gigachat';
 import { AIProvider } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const validProviders: AIProvider[] = ['google-gemma', 'mistral-medium'];
+    const validProviders: AIProvider[] = ['google-gemma', 'mistral-medium', 'gigachat'];
     if (!validProviders.includes(provider)) {
       return NextResponse.json(
         { error: { message: 'Invalid provider specified' } },
@@ -27,8 +27,11 @@ export async function POST(request: NextRequest) {
     let parseFn: (chunk: string) => string | null;
 
     if (provider === 'mistral-medium') {
-      stream = await sendMessageToMistral(messages);
+      stream = await sendMessageToMistral(messages, provider);
       parseFn = parseMistralStreamChunk;
+    } else if (provider === 'gigachat') {
+      stream = await sendMessageToGigaChat(messages, provider);
+      parseFn = parseGigaChatStreamChunk;
     } else {
       stream = await sendMessageToProvider(messages, provider);
       parseFn = parseStreamChunk;

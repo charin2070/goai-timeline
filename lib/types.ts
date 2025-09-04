@@ -98,4 +98,25 @@ export const Gemma3Model = {
 
 // The list of AI providers is now fetched from the database.
 // This type is used to identify the selected provider.
-export type AIProvider = string;
+export type AIProvider = 'google-gemma' | 'mistral-medium' | 'gigachat';
+
+export const AI_PROVIDERS: ProviderConfig[] = [
+    {
+        id: 'google-gemma',
+        name: 'Google Gemma',
+        models: [],
+        description: 'Fast and efficient model for general conversation'
+    },
+    {
+        id: 'mistral-medium',
+        name: 'Mistral Medium',
+        models: [],
+        description: 'Advanced model with enhanced reasoning capabilities'
+    },
+    {
+        id: 'gigachat',
+        name: 'GigaChat',
+        models: [],
+        description: 'The model from Sber'
+    }
+];

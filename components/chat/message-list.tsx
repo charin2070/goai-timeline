@@ -34,25 +34,8 @@ export function MessageList({ messages, isTyping, onRepeatMessage, onEditMessage
       <div className="max-w-4xl mx-auto">
         {messages.length === 0 ? (
           <div className="flex flex-row items-center justify-center h-100 text-center px-4">
-        
-              <Image
-                src="/favicon.svg"
-                alt="Chat GoAI Logo"
-                width={68}
-                height={68}
-                priority
-              />
-     
             <p className="text-gray-400 max-w-sm font-light text-md text-left">
-              Я могу сочинить симфонию и превратить холст в шедевр, но вы
-              <span
-                className="text-gray-200 max-w-md font-bold text-md"
-                style={{ filter: 'blur(6px)', cursor: 'pointer' }}
-                title="Содержимое скрыто"
-              >выебу
-              </span>
-              твои логи
-                 </p>
+              Чат пуст</p>
           </div>
         ) : (
           <div className="flex flex-col gap-4 p-4">

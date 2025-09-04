@@ -45,4 +45,4 @@ export function useAiProvider(initialProvider: AIProvider = 'google-gemma') {
     isLoading,
     availableProviders: AI_PROVIDERS,
   };
-} 
+}

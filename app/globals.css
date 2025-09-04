@@ -302,3 +302,13 @@
 .animate-tetris-fall-reverse {
   animation: tetris-fall-reverse 2.5s linear infinite;
 }
+
+/* Custom styles for RightSidebar */
+.right-sidebar-syntax-highlighter pre,
+.right-sidebar-syntax-highlighter code {
+  text-shadow: none !important;
+}
+
+.right-sidebar-syntax-highlighter * {
+  color: #e0e0e0 !important; /* Light gray color */
+}

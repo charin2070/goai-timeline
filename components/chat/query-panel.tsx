@@ -2,7 +2,9 @@ import React, { useState, useImperativeHandle, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Send, Trash2 } from "lucide-react";
 import DropButton from '@/components/ui/drop-button';
-import { UploadDropdown } from '@/components/upload-dropdown';
+import { AttachDropdown } from '@/components/attach-dropdown';
+import { AiProviderDropdown } from "./ai-provider-dropdown";
+import { useAIProviderContext } from "@/lib/ai-provider-context";
 
 // Define the QueryPanel component
 
@@ -24,6 +26,7 @@ export interface QueryPanelRef {
 const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, placeholder, onClearChat, onLogFileUpload, onLogPaste, onChatFileUpload, onChatPaste }: QueryPanelProps, ref) => {
   const [inputValue, setInputValue] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { selectedProvider, changeProvider, availableProviders } = useAIProviderContext();
 
   useImperativeHandle(ref, () => ({
     setInputValue,
@@ -61,11 +64,9 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
       
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <UploadDropdown
+          <AttachDropdown
             onLogFileUpload={onLogFileUpload}
-            onLogPaste={onLogPaste}
             onChatFileUpload={onChatFileUpload}
-            onChatPaste={onChatPaste}
             className="text-gray-400 hover:text-white"
           />
           <Button variant="ghost" size="icon" onClick={onClearChat} className="text-gray-400 hover:text-white">
@@ -74,6 +75,14 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
         </div>
         
         <div className="flex flex-row items-end gap-1">
+          <AiProviderDropdown
+            selectedProvider={selectedProvider}
+            onProviderChange={changeProvider}
+            availableProviders={availableProviders}
+            compact={true}
+            showStatus={false}
+            className="w-40"
+          />
           <DropButton 
             label=""
             width="46px"

@@ -1,0 +1,18 @@
+'Log files:
+F:\res\dev\GoAI Timeline\.npm-cache\_logs\2025-08-21T06_35_39_157Z-debug-0.log
+
+# npm resolution error report
+
+While resolving: goai-timeline@0.3.9
+Found: eslint@9.33.0
+node_modules/eslint
+  eslint@"^9.32.0" from the root project
+
+Could not resolve dependency:
+peer eslint@"^7.23.0 || ^8.0.0" from eslint-config-next@13.5.1
+node_modules/eslint-config-next
+  eslint-config-next@"13.5.1" from the root project
+
+Fix the upstream dependency conflict, or retry
+this command with --force or --legacy-peer-deps
+to accept an incorrect (and potentially broken) dependency resolution.

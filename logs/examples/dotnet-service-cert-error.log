@@ -1,0 +1,25 @@
+2025-09-04 14:50:10.112 INFO [Microsoft.Hosting.Lifetime] [ThreadId:1] Application started. Press Ctrl+C to shut down.
+2025-09-04 14:50:10.115 INFO [Microsoft.Hosting.Lifetime] [ThreadId:1] Hosting environment: Production
+2025-09-04 14:50:10.116 INFO [Microsoft.Hosting.Lifetime] [ThreadId:1] Content root path: /app
+2025-09-04 14:50:12.345 INFO [MyWebApp.Controllers.HomeController] [ThreadId:15] Request starting HTTP/2 GET https://localhost:5001/ - -
+2025-09-04 14:50:12.348 INFO [MyWebApp.Controllers.HomeController] [ThreadId:15] Executing endpoint 'MyWebApp.Controllers.HomeController.Index (MyWebApp)'
+2025-09-04 14:50:12.350 INFO [Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker] [ThreadId:15] Route matched with {action = "Index", controller = "Home"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index() on controller MyWebApp.Controllers.HomeController (MyWebApp).
+2025-09-04 14:50:13.102 INFO [MyWebApp.Services.ExternalApiService] [ThreadId:23] Attempting to call external service at https://api.thirdparty.com/data
+2025-09-04 14:50:13.567 ERROR [MyWebApp.Services.ExternalApiService] [ThreadId:23] An error occurred while sending the request.
+System.Net.Http.HttpRequestException: The SSL connection could not be established, see inner exception.
+ ---> System.Security.Authentication.AuthenticationException: The remote certificate is invalid according to the validation procedure.
+   at System.Net.Security.SslStream.StartSendAuthResetSignal(ProtocolToken message, AsyncProtocolRequest asyncRequest, ExceptionDispatchInfo exception)
+   at System.Net.Security.SslStream.ForceAuthenticationAsync[TIOAdapter](TIOAdapter adapter, Boolean receiveFirst, Byte[] reAuthenticationData, Boolean isApm)
+   at System.Net.Http.ConnectHelper.EstablishSslConnectionAsyncCore(Boolean async, Stream stream, SslClientAuthenticationOptions sslOptions, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.ConnectHelper.EstablishSslConnectionAsyncCore(Boolean async, Stream stream, SslClientAuthenticationOptions sslOptions, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.GetHttpConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.SendAsyncCore(HttpRequestMessage request, HttpCompletionOption completionOption, Boolean async, Boolean emitTelemetryStartStop, CancellationToken cancellationToken)
+   at MyWebApp.Services.ExternalApiService.GetDataAsync() in /app/Services/ExternalApiService.cs:line 42
+2025-09-04 14:50:13.570 WARN [MyWebApp.Controllers.HomeController] [ThreadId:15] Failed to retrieve data from external service. Returning cached data.
+2025-09-04 14:50:13.572 INFO [Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker] [ThreadId:15] Executed action MyWebApp.Controllers.HomeController.Index (MyWebApp) in 1221.4567ms
+2025-09-04 14:50:13.575 INFO [MyWebApp.Controllers.HomeController] [ThreadId:15] Request finished HTTP/2 GET https://localhost:5001/ - 200 - text/html;+charset=utf-8 1228.32ms

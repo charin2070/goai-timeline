@@ -15,56 +15,67 @@ async function getAccessToken() {
     return accessToken;
   }
 
-  const response = await fetch(AUTH_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Basic ${API_KEY}`,
-      'RqUID': randomUUID(),
-    },
-    body: `scope=${SCOPE}`,
-  });
+  try {
+    const response = await fetch(AUTH_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${API_KEY}`,
+        'RqUID': randomUUID(),
+      },
+      body: `scope=${SCOPE}`,
+    });
 
-  if (!response.ok) {
-    throw new Error('Failed to get GigaChat access token');
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to get GigaChat access token: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    accessToken = data.access_token;
+    tokenExpiry = Date.now() + (data.expires_at - 60) * 1000; // Refresh 60 seconds before expiry
+
+    return accessToken;
+  } catch (error) {
+    console.error('Error in getAccessToken:', error);
+    throw error;
   }
-
-  const data = await response.json();
-  accessToken = data.access_token;
-  tokenExpiry = Date.now() + (data.expires_at - 60) * 1000; // Refresh 60 seconds before expiry
-
-  return accessToken;
 }
 
 export async function sendMessageToGigaChat(
   messages: { role: string; content: string }[],
   provider: AIProvider
 ): Promise<ReadableStream<Uint8Array>> {
-  const token = await getAccessToken();
+  try {
+    const token = await getAccessToken();
 
-  const response = await fetch(GIGACHAT_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      model: provider,
-      messages,
-      stream: true,
-    }),
-  });
+    const response = await fetch(GIGACHAT_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        model: provider,
+        messages,
+        stream: true,
+      }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Failed to send message to GigaChat');
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to send message to GigaChat: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body received');
+    }
+
+    return response.body;
+  } catch (error) {
+    console.error('Error in sendMessageToGigaChat:', error);
+    throw error;
   }
-
-  if (!response.body) {
-    throw new Error('No response body received');
-  }
-
-  return response.body;
 }
 
 export function parseGigaChatStreamChunk(chunk: string): string | null {

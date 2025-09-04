@@ -2,18 +2,17 @@
 
 import { Button } from '@/components/ui/button';
 import { Plus, MessageSquare, Trash2 } from 'lucide-react';
+import { AIProvider, AI_PROVIDERS } from '@/lib/types';
 import { AiProviderDropdown } from './ai-provider-dropdown';
-import { AIProvider } from '@/lib/types';
 import AddDataButton from '@/components/ui/add-data-button';
 
 interface SidebarProps {
   onNewChat: () => void;
   selectedProvider: AIProvider;
   onProviderChange: (provider: AIProvider) => void;
-  availableProviders: AIProvider[];
 }
 
-export function Sidebar({ onNewChat, selectedProvider, onProviderChange, availableProviders }: SidebarProps) {
+export function Sidebar({ onNewChat, selectedProvider, onProviderChange }: SidebarProps) {
   return (
     <div className="chatgpt-sidebar flex flex-col h-full">
       {/* New Chat Button */}
@@ -26,7 +25,7 @@ export function Sidebar({ onNewChat, selectedProvider, onProviderChange, availab
         <AiProviderDropdown
           selectedProvider={selectedProvider}
           onProviderChange={onProviderChange}
-          availableProviders={availableProviders}
+          availableProviders={AI_PROVIDERS}
         />
       </div>
 

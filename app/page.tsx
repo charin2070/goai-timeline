@@ -62,6 +62,10 @@ function ChatContent() {
         <AppNavbar className="h-16 bg-black/20 backdrop-blur-xl border-b border-white/10 shadow-lg" />
         <div className="chatgpt-main flex flex-col flex-1">
           <ResizablePanelGroup direction="horizontal">
+            <ResizablePanel defaultSize={25}>
+              <RightSidebar onSendMessage={sendMessage} onClearChat={clearChat} />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
             <ResizablePanel defaultSize={75}>
               <div className="flex-1 flex flex-col min-h-0">
                 <MessageList 
@@ -71,10 +75,6 @@ function ChatContent() {
                   onEditMessage={handleEditMessage}
                 />
               </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={25}>
-              <RightSidebar />
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { sendMessageToProvider, parseStreamChunk } from '@/lib/openrouter';
 import { sendMessageToGigaChat, parseGigaChatStreamChunk } from '@/lib/gigachat';
+import { sendMessageToMistral, parseMistralStreamChunk } from '@/lib/mistral';
 import { AIProvider } from '@/lib/types';
 
 export async function POST(request: NextRequest) {

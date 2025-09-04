@@ -19,11 +19,11 @@ export async function sendMessageToMistral(
 
   const availableModels = await getModels();
   console.log('Available models:', availableModels);
-  const isModelAvailable = availableModels.data.some(model => model.id === provider);
+  const isModelAvailable = availableModels.data.some(model => model.id === MODEL);
 
   if (!isModelAvailable) {
     const modelList = availableModels.data.map(model => model.id).join(', ');
-    throw new Error(`Модель ${provider} провайдера Mistral не доступна. Сейчас у него такие модели: ${modelList}`);
+    throw new Error(`Модель ${MODEL} провайдера Mistral не доступна. Сейчас у него такие модели: ${modelList}`);
   }
 
   const response = await fetch(MISTRAL_API_URL, {
@@ -33,7 +33,7 @@ export async function sendMessageToMistral(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: provider,
+      model: MODEL,
       messages,
       stream: true,
       temperature: TEMPERATURE,

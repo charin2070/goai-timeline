@@ -3,7 +3,8 @@
 import { useState, useRef } from 'react';
 import { useFileContext } from '@/lib/file-context';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { light, atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import oneLight from 'react-syntax-highlighter/dist/esm/styles/prism/one-light';
+import prism from 'react-syntax-highlighter/dist/esm/styles/prism/prism';
 import { motion } from 'framer-motion';
 import { getFileType, filterLogErrors } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,10 +26,12 @@ import { FileSidebar } from './file-sidebar';
 import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useChatFunctions } from '@/lib/chat-functions-context';
+interface RightSidebarProps {
+  onSendMessage: (message: string) => void;
+  onClearChat: () => void;
+}
 
-export function RightSidebar() {
-  const { onSendMessage, onClearChat } = useChatFunctions();
+export function RightSidebar({ onSendMessage, onClearChat }: RightSidebarProps) {
   const { selectedFile } = useFileContext();
   const [selectedOS, setSelectedOS] = useState('Linux');
   const [selectedApp, setSelectedApp] = useState('.NET application');
@@ -49,9 +52,9 @@ export function RightSidebar() {
     const fileType = getFileType(fileName);
     switch (fileType) {
       case 'log':
-        return atomOneLight;
+        return oneLight;
       default:
-        return light;
+        return prism;
     }
   };
 
@@ -62,7 +65,37 @@ export function RightSidebar() {
     : '';
 
   const generatePAMLPrompt = () => {
+    const staticPrompt = `Ты — опытный .NET инженер, разбирающийся в микросервисах на Linux, Windows, MacOS, Android и iOS. 
+Твоя задача — **найти корневую причину всех ошибок**, анализируя весь контекст, а не просто указать стэк исключений. 
+
+Обрати внимание на:
+- Все WARN и ERROR сообщения (и другие не стандартные сообщения).
+- Кэширование объектов
+- Последовательность событий: первая попытка запроса, повторная попытка, изменения кэша.
+- Взаимодействие с внешними сервисами: PostgreSQL, Redis.
+- Потенциальные скрытые последствия: утечки памяти, IndexOutOfRangeException в 
+CleanupOldCache.
+
+Выведи строго структурированно в формате Markdown:
+1. **Краткое описание корневой проблемы:** включи симптом и реальную причину, почему ошибка проявляется.
+2. **Техническая причина возникновения ошибки:** объясни связь между первой попыткой, кэшированием и retry-логикой.
+3. **Влияющие части кода и сервисов:** перечисли конкретные классы, методы и внешние сервисы, участвующие в ошибке.
+4. **Конкретные рекомендации по исправлению:** пошаговые действия с кодом или настройками, чтобы устранить проблему и предотвратить повторное возникновение.
+
+Обязательно:  
+- Укажи, что 
+NullReferenceException возникает только при первой попытке из-за кэша без TTL.  
+- Опиши связь с повторными попытками и поведением 
+PaymentService.  
+- Укажи потенциальную причину 
+IndexOutOfRangeException при очистке кэша.  
+- Не оставляй общих шаблонных фраз, всё должно быть конкретно и понятно.
+`;
+
     let prompt = '<PAML>';
+    prompt += `  <SystemPrompt>
+${staticPrompt}
+  </SystemPrompt>`;
     prompt += `  <OS>${selectedOS}</OS>`;
     prompt += `  <Application>${selectedApp}</Application>`;
     prompt += `  <LogContent>

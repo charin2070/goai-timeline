@@ -6,9 +6,37 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, X, FileText, Image, Music } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getFileType } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+const dropdownVariants = {
+  hidden: {
+    opacity: 0,
+    y: -10,
+    transition: { duration: 0.2 }
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { 
+      duration: 0.2,
+      staggerChildren: 0.05
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: -5 },
+  visible: { opacity: 1, y: 0 }
+};
 
 export function FileSidebar() {
-  const { files, selectedFile, addFile, removeFile, selectFile } = useFileContext();
+  const { files, selectedFile, addFile, removeFile, selectFile, updateFile } = useFileContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddFileClick = () => {
@@ -47,12 +75,7 @@ export function FileSidebar() {
   };
 
   return (
-    <motion.div
-      initial={{ x: '-100%' }}
-      animate={{ x: 0 }}
-      transition={{ duration: 0.5, ease: 'easeInOut' }}
-      className="flex flex-col h-full bg-gray-900/70 backdrop-blur-lg text-white p-4 w-64 border-r border-gray-800"
-    >
+    <div className="flex flex-col h-full p-4 bg-gray-800/50">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">Файлы</h2>
         <motion.div whileHover={{ scale: 1.1, rotate: 90 }} whileTap={{ scale: 0.9 }}>
@@ -77,26 +100,75 @@ export function FileSidebar() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center justify-between"
+                className="flex flex-col items-start p-2 rounded-lg mb-2 bg-gray-700/50"
               >
-                <Button
-                  variant={selectedFile?.id === file.id ? 'secondary' : 'ghost'}
-                  className="w-full justify-start mb-2 overflow-hidden text-ellipsis whitespace-nowrap"
-                  onClick={() => selectFile(file.id)}
-                >
-                  {getFileIcon(file.name)}
-                  <span className="truncate">{file.name}</span>
-                </Button>
-                <motion.div whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}>
-                  <Button variant="ghost" size="icon" onClick={() => removeFile(file.id)}>
-                    <X className="w-4 h-4" />
+                <div className="flex items-center justify-between w-full">
+                  <Button
+                    variant={selectedFile?.id === file.id ? 'secondary' : 'ghost'}
+                    className="flex-1 justify-start overflow-hidden text-ellipsis whitespace-nowrap"
+                    onClick={() => selectFile(file.id)}
+                  >
+                    {getFileIcon(file.name)}
+                    <span className="truncate">{file.name}</span>
                   </Button>
-                </motion.div>
+                  <motion.div whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}>
+                    <Button variant="ghost" size="icon" onClick={() => removeFile(file.id)}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </motion.div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2 w-full">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="secondary" className="w-full">{file.os}</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent asChild>
+                      <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden">
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'Linux' })}><motion.div variants={itemVariants}>Linux</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'Windows' })}><motion.div variants={itemVariants}>Windows</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'MacOS' })}><motion.div variants={itemVariants}>MacOS</motion.div></DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'Android' })}><motion.div variants={itemVariants}>Android</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { os: 'iOS' })}><motion.div variants={itemVariants}>iOS</motion.div></DropdownMenuItem>
+                      </motion.div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="secondary" className="w-full">{file.app}</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent asChild>
+                      <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden">
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: '.NET application' })}><motion.div variants={itemVariants}>.NET application</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'JAVA application' })}><motion.div variants={itemVariants}>JAVA application</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'C++ application' })}><motion.div variants={itemVariants}>C++ application</motion.div></DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'nGinx' })}><motion.div variants={itemVariants}>nGinx</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { app: 'IIS' })}><motion.div variants={itemVariants}>IIS</motion.div></DropdownMenuItem>
+                      </motion.div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="secondary" className="w-full">{file.server}</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent asChild>
+                      <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden">
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Frontend' })}><motion.div variants={itemVariants}>Frontend</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Middle' })}><motion.div variants={itemVariants}>Middle</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Backend' })}><motion.div variants={itemVariants}>Backend</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'DB' })}><motion.div variants={itemVariants}>DB</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'Client' })}><motion.div variants={itemVariants}>Client</motion.div></DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => updateFile(file.id, { server: 'External service' })}><motion.div variants={itemVariants}>External service</motion.div></DropdownMenuItem>
+                      </motion.div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </motion.li>
             ))}
           </AnimatePresence>
         </ul>
       </div>
-    </motion.div>
+    </div>
   );
 }

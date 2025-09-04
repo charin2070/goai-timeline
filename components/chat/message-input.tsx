@@ -41,7 +41,7 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
   };
 
   return (
-    <div className="chatgpt-input-container p-4">
+    <div className="p-4 border-t border-border bg-background">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-end space-x-2">
           <div className="flex-1 relative">
@@ -53,11 +53,10 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
                 adjustTextareaHeight();
               }}
               onKeyDown={handleKeyDown}
-              placeholder="Message ChatGPT..."
+              placeholder="Отправить сообщение..."
               disabled={disabled}
               className={cn(
-                'chatgpt-input-box min-h-[44px] max-h-[120px] resize-none pr-12 transition-colors',
-                'focus:ring-0 focus:border-blue-500',
+                'min-h-[44px] max-h-[120px] resize-none pr-12 transition-colors bg-input text-foreground border-border focus:ring-0 focus:border-primary',
                 disabled && 'opacity-50 cursor-not-allowed'
               )}
               rows={1}
@@ -68,7 +67,7 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
             disabled={disabled || !message.trim()}
             size="default"
             className={cn(
-              'chatgpt-send-button h-11 px-4 transition-all duration-200',
+              'h-11 px-4 transition-all duration-200 bg-primary text-primary-foreground hover:bg-primary/90',
               'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           >
@@ -81,8 +80,8 @@ export function MessageInput({ onSendMessage, disabled }: MessageInputProps) {
           </Button>
         </div>
         
-        <div className="mt-2 text-xs text-gray-400 text-center">
-          ChatGPT can make mistakes. Consider checking important information.
+        <div className="mt-2 text-xs text-muted-foreground text-center">
+          GoAI Timeline может допускать ошибки. Проверяйте важную информацию.
         </div>
       </div>
     </div>

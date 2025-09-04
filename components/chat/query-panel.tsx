@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useImperativeHandle, forwardRef, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Send, Trash2 } from "lucide-react";
 import DropButton from '@/components/ui/drop-button';
@@ -25,12 +25,21 @@ export interface QueryPanelRef {
 
 const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, placeholder, onClearChat, onLogFileUpload, onLogPaste, onChatFileUpload, onChatPaste }: QueryPanelProps, ref) => {
   const [inputValue, setInputValue] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { selectedProvider, changeProvider, availableProviders } = useAIProviderContext();
 
   useImperativeHandle(ref, () => ({
-    setInputValue,
+    setInputValue: (value: string) => {
+      setInputValue(value);
+    },
   }));
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [inputValue]);
 
   const handleSendMessage = () => {
     if (inputValue.trim()) {
@@ -47,22 +56,22 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
   };
 
   return (
-    <div className="bg-black bg-opacity-50 backdrop-blur-md ring-1 ring-gray-800 hover:ring-gray-700 focus-within:ring-gray-700 hover:focus-within:ring-gray-700 relative w-full overflow-hidden shadow shadow-black/10 rounded-3xl p-3 transition-all duration-100 ease-in-out flex flex-col max-w-2xl mx-auto">
-      <div className="relative z-10 mb-12">
+    <div className="w-full max-w-2xl mx-auto">
+      <div className="relative">
         <textarea
+          ref={textareaRef}
           dir="auto"
           aria-label="Опишите детали..."
-          className="w-full px-3 pt-5 bg-transparent focus:outline-none text-gray-200 align-bottom resize-none h-11 text-sm"
-          style={{ height: "44px" }}
+          className="w-full px-3 pr-4 pt-5 bg-gray-800 border border-gray-600 rounded-xl focus:outline-none text-gray-200 align-bottom resize-none text-sm"
+          style={{ maxHeight: "200px" }}
+          rows={1}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
         />
-
       </div>
-      
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-2">
           <AttachDropdown
             onLogFileUpload={onLogFileUpload}
@@ -72,9 +81,6 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
           <Button variant="ghost" size="icon" onClick={onClearChat} className="text-gray-400 hover:text-white">
             <Trash2 className="w-4 h-4" />
           </Button>
-        </div>
-        
-        <div className="flex flex-row items-end gap-1">
           <AiProviderDropdown
             selectedProvider={selectedProvider}
             onProviderChange={changeProvider}
@@ -83,15 +89,17 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
             showStatus={false}
             className="w-40"
           />
+        </div>
+        <div className="flex flex-row items-end gap-1">
           <DropButton 
             label=""
-            width="46px"
-            height="46px"
+            width="36px"
+            height="36px"
             bgColor="transparent"
             textColor="gray-200"
             icon={Send}
-            iconWidth="56px"
-            iconHeight="56px"
+            iconWidth="46px"
+            iconHeight="46px"
             onClick={handleSendMessage} 
           />
         </div>

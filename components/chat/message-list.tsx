@@ -33,9 +33,10 @@ export function MessageList({ messages, isTyping, onRepeatMessage, onEditMessage
     <ScrollArea ref={scrollAreaRef} className="flex-1">
       <div className="max-w-4xl mx-auto">
         {messages.length === 0 ? (
-          <div className="flex flex-row items-center justify-center h-100 text-center px-4">
-            <p className="text-gray-400 max-w-sm font-light text-md text-left">
-              Чат пуст</p>
+          <div className="flex flex-col items-center justify-center h-full text-center px-4 py-24">
+            <p className="text-muted-foreground text-lg font-light">
+              Выберите лог-файлы и нажмите "Анализировать"
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-4 p-4">

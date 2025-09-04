@@ -4,6 +4,34 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bot, Sparkles, Zap, BrainCircuit } from 'lucide-react';
 import { AIProvider, AIModel, ProviderConfig } from '@/lib/types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { motion } from 'framer-motion';
+
+const dropdownVariants = {
+  hidden: {
+    opacity: 0,
+    y: -10,
+    transition: { duration: 0.2 }
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { 
+      duration: 0.2,
+      staggerChildren: 0.05
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: -5 },
+  visible: { opacity: 1, y: 0 }
+};
 
 interface AiProviderDropdownProps {
   selectedProvider: AIProvider;
@@ -59,36 +87,26 @@ export function AiProviderDropdown({
           AI Provider
         </div>
       )}
-      <div className="relative">
-        <select 
-          value={safeSelectedProvider} 
-          onChange={(e) => {
-            console.log('Dropdown value changed to:', e.target.value);
-            onProviderChange(e.target.value as AIProvider);
-          }}
-          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 appearance-none text-black"
-        >
-          {availableProviders.map((provider) => (
-            <option key={provider.id} value={provider.id}>
-              {provider.name}
-              {showStatus && ` (${getProviderStatus(provider.id as AIProvider).text})`}
-            </option>
-          ))}
-        </select>
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          {getProviderIcon(safeSelectedProvider)}
-        </div>
-      </div>
-      {showStatus && (
-        <div className="mt-2 flex items-center gap-2">
-          <Badge 
-            variant={getProviderStatus(safeSelectedProvider).variant} 
-            className="text-xs"
-          >
-            {getProviderStatus(safeSelectedProvider).text}
-          </Badge>
-        </div>
-      )}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="secondary" className="w-full justify-between">
+            {selectedProviderName}
+            {getProviderIcon(safeSelectedProvider)}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent asChild>
+          <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="hidden">
+            {availableProviders.map((provider) => (
+              <DropdownMenuItem key={provider.id} onSelect={() => onProviderChange(provider.id as AIProvider)}>
+                <motion.div variants={itemVariants} className="flex items-center justify-between w-full">
+                  <span>{provider.name}</span>
+                  {showStatus && <Badge variant={getProviderStatus(provider.id as AIProvider).variant}>{getProviderStatus(provider.id as AIProvider).text}</Badge>}
+                </motion.div>
+              </DropdownMenuItem>
+            ))}
+          </motion.div>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

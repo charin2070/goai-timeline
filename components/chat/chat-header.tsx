@@ -26,19 +26,18 @@ interface ChatHeaderProps {
 export function ChatHeader({ messageCount, onClearChat, selectedProvider }: ChatHeaderProps) {
   return (
     <>
-      <div className="chatgpt-message border-b border-gray-700 px-4 py-3">
+      <div className="border-b border-gray-800 px-4 py-3 bg-background">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="chatgpt-avatar chatgpt-avatar-assistant flex items-center justify-center">
-              <span className="text-white text-sm font-medium">G</span>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary-foreground text-primary">
+              <span className="text-sm font-medium">G</span>
             </div>
             <div>
-              <h1 className="chatgpt-text font-medium">ChatGPT</h1>
-              <p className="text-sm text-gray-400">
+              <h1 className="font-medium text-foreground">GoAI Timeline</h1>
+              <p className="text-sm text-muted-foreground">
                 {messageCount === 0
                   ? 'Ready to chat'
-                  : `${Math.ceil(messageCount / 2)} ${Math.ceil(messageCount / 2) === 1 ? 'conversation' : 'conversations'
-                  }`}
+                  : `${messageCount} ${messageCount === 1 ? 'message' : 'messages'}`}
               </p>
             </div>
           </div>
@@ -57,26 +56,26 @@ export function ChatHeader({ messageCount, onClearChat, selectedProvider }: Chat
                   <Button
                     variant="outline"
                     size="sm"
-                    className="chatgpt-clear-button text-gray-300 hover:text-white"
+                    className="text-muted-foreground hover:text-foreground border-border hover:bg-accent"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Clear Chat
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="bg-gray-800 border-gray-700">
+                <AlertDialogContent className="bg-card border-border">
                   <AlertDialogHeader>
-                    <AlertDialogTitle className="text-white">Clear Chat History</AlertDialogTitle>
-                    <AlertDialogDescription className="text-gray-300">
+                    <AlertDialogTitle className="text-foreground">Clear Chat History</AlertDialogTitle>
+                    <AlertDialogDescription className="text-muted-foreground">
                       Are you sure you want to clear all messages? This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
+                    <AlertDialogCancel className="bg-secondary text-secondary-foreground border-border hover:bg-secondary/80">
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={onClearChat}
-                      className="bg-red-500 hover:bg-red-600 text-white"
+                      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                     >
                       Clear Chat
                     </AlertDialogAction>

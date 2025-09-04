@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { Providers } from '@/components/providers';
 
 export const metadata: Metadata = {
-  title: 'GoAI Инциденты',
+  title: 'GoAI - Инциденты',
   description: 'Events summarization and analysis',
   keywords: ['AI', 'chat', 'ChatGPT', 'OpenRouter', 'Mistral'],
   authors: [{ name: 'Charin' }],

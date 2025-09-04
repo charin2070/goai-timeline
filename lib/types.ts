@@ -105,18 +105,18 @@ export const AI_PROVIDERS: ProviderConfig[] = [
         id: 'google-gemma',
         name: 'Google Gemma',
         models: [],
-        description: 'Fast and efficient model for general conversation'
+        description: 'Быстрая и эффективная модель для общих разговоров'
     },
     {
         id: 'mistral-medium',
         name: 'Mistral Medium',
         models: [],
-        description: 'Advanced model with enhanced reasoning capabilities'
+        description: 'Продвинутая модель с улучшенными возможностями рассуждения'
     },
     {
         id: 'gigachat',
         name: 'GigaChat',
         models: [],
-        description: 'The model from Sber'
+        description: 'Модель от Сбера'
     }
 ];

@@ -35,12 +35,12 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
   };
 
   const avatar = (
-    <Avatar className={cn('flex-shrink-0 w-10 h-10 rounded-full', isError && !isUser && 'border-2 border-red-500')}>
-      <AvatarImage src={isUser ? userAvatar || '' : ''} alt={isUser ? 'User' : 'AI'} />
+    <Avatar className={cn('flex-shrink-0 w-10 h-10 rounded-full', isError && !isUser && 'border-2 border-destructive')}>
+      <AvatarImage src={isUser ? userAvatar || '' : ''} alt={isUser ? 'Пользователь' : 'AI'} />
       <AvatarFallback className={cn(
-        'text-white font-bold',
-        isUser ? 'bg-blue-500' : 'bg-gray-700',
-        isError && !isUser && 'bg-red-800'
+        'text-primary-foreground font-bold',
+        isUser ? 'bg-primary' : 'bg-secondary',
+        isError && !isUser && 'bg-destructive'
       )}>
         {isUser ? <User size={20} /> : 'AI'}
       </AvatarFallback>
@@ -51,31 +51,19 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
     <div className={cn('flex items-start gap-4 w-full', isUser ? 'justify-end' : 'justify-start')}>
       {!isUser && avatar}
       <div className={cn(
-        'relative max-w-xl min-w-[120px] rounded-xl p-4 pb-8 shadow-lg transition-all duration-300 hover:shadow-2xl',
+        'relative max-w-xl min-w-[120px] rounded-xl p-4 shadow-md',
         isUser
-          ? 'bg-blue-900/50 border border-blue-800/50'
-          : 'bg-gray-800/50 border border-gray-700/50',
-        isError && !isUser && 'bg-red-900/50 border-red-800/50'
+          ? 'bg-gray-700 text-white'
+          : 'bg-gray-800 text-white',
+        isError && !isUser && 'bg-destructive text-destructive-foreground'
       )}>
         {/* Increased bottom padding to pb-8 to prevent text overlap */}
-        {!isUser && (
-          <div className="flex items-center justify-between mb-2">
-            <span className={cn(
-              'font-semibold text-sm',
-              isError ? 'text-red-300' : 'text-gray-300'
-            )}>
-              AI Ассистент
-            </span>
-            <span className="text-xs text-gray-500">
-              {format(message.timestamp, 'HH:mm')}
-            </span>
-          </div>
-        )}
+        
 
         <div className={cn(
           'text-sm leading-relaxed',
-          isUser ? 'text-gray-200' : 'text-gray-300',
-          isError && !isUser && 'text-red-300'
+          isUser ? 'text-white' : 'text-white',
+          isError && !isUser && 'text-destructive-foreground'
         )}>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
@@ -99,25 +87,23 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
                 };
 
                 return (
-                  <>
+                  <div className="relative">
                     <pre ref={preRef} {...props}>
                       {children}
                     </pre>
-                    <div className="mt-2 flex justify-end">
-                      <button
-                        onClick={onCopy}
-                        className="p-1 rounded-full bg-gray-700/80 hover:bg-gray-600/80 transition-colors duration-200 opacity-80 hover:opacity-100"
-                        title="Копировать код"
-                        aria-label="Копировать код"
-                      >
-                        {copied ? (
-                          <Check className="w-3 h-3 text-green-400" />
-                        ) : (
-                          <Copy className="w-3 h-3 text-gray-200" />
-                        )}
-                      </button>
-                    </div>
-                  </>
+                    <button
+                      onClick={onCopy}
+                      className="absolute top-2 right-2 p-1 rounded-md bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-200 opacity-0 group-hover:opacity-100"
+                      title="Копировать код"
+                      aria-label="Копировать код"
+                    >
+                      {copied ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 );
               },
               a: ({ href, children }) => (
@@ -125,7 +111,7 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
                   href={href || ''}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline decoration-dotted hover:decoration-solid"
+                  className="underline decoration-dotted hover:decoration-solid text-primary-foreground"
                 >
                   {children}
                 </a>
@@ -139,22 +125,13 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
               '[&>ol]:list-decimal [&>ol]:pl-5',
               '[&>h1]:text-lg [&>h1]:font-semibold',
               '[&>h2]:text-base [&>h2]:font-semibold',
-              '[&>code]:bg-black/30 [&>code]:px-1.5 [&>code]:py-0.5 [&>code]:rounded',
-              '[&>pre]:bg-black/40 [&>pre]:p-3 [&>pre]:rounded-lg [&>pre]:overflow-auto'
+              '[&>code]:bg-accent [&>code]:px-1.5 [&>code]:py-0.5 [&>code]:rounded',
+              '[&>pre]:bg-accent [&>pre]:p-3 [&>pre]:rounded-lg [&>pre]:overflow-auto'
             )}
           >
             {message.content}
           </ReactMarkdown>
         </div>
-
-        {isUser && (
-          <div className="absolute bottom-2 right-3 flex items-center gap-1">
-            <span className="text-xs text-gray-500">
-              {format(message.timestamp, 'HH:mm')}
-            </span>
-            {getStatusIcon()}
-          </div>
-        )}
 
         {/* Action buttons for user messages */}
         {isUser && (onRepeatMessage || onEditMessage) && (
@@ -162,31 +139,30 @@ export function MessageBubble({ message, userAvatar, onRepeatMessage, onEditMess
             {onRepeatMessage && (
               <button
                 onClick={() => onRepeatMessage(message.id)}
-                className="p-1 rounded-full bg-gray-700/80 hover:bg-gray-600/80 transition-colors duration-200 opacity-70 hover:opacity-100"
+                className="p-1 rounded-md bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-200"
                 title="Повторить сообщение"
               >
-                <RotateCcw className="w-3 h-3 text-gray-300" />
+                <RotateCcw className="w-4 h-4" />
               </button>
             )}
             {onEditMessage && (
               <button
                 onClick={() => onEditMessage(message.id)}
-                className="p-1 rounded-full bg-gray-700/80 hover:bg-gray-600/80 transition-colors duration-200 opacity-70 hover:opacity-100"
+                className="p-1 rounded-md bg-muted/80 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-200"
                 title="Редактировать сообщение"
               >
-                <Edit className="w-3 h-3 text-gray-300" />
+                <Edit className="w-4 h-4" />
               </button>
             )}
           </div>
         )}
 
         {isError && !isUser && (
-          <div className="mt-2 text-xs text-red-400">
+          <div className="mt-2 text-xs text-destructive-foreground">
             Произошла ошибка при получении ответа.
           </div>
         )}
       </div>
-      {isUser && avatar}
     </div>
   );
 }

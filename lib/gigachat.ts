@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { AIProvider } from './types';
 
 const GIGACHAT_API_URL = 'https://gigachat.devices.sberbank.ru/api/v1/chat/completions';
 const AUTH_URL = 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth';

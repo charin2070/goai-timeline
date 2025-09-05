@@ -1,5 +1,5 @@
 import { sendMessageToProvider } from './openrouter';
-import { sendMessageToMistral, getModels as getMistralModels } from './mistral';
+import { sendMessageToMistral, getModels as getMistralModels, MistralProvider } from './mistral';
 import { AIProvider } from './types';
 
 export interface AiProvider {
@@ -21,7 +21,8 @@ export class AiProviderAdapter {
       case 'google-gemma':
         return sendMessageToProvider(messages, provider);
       case 'mistral-medium':
-        return sendMessageToMistral(messages);
+        const mistralProviderInstance = new MistralProvider();
+        return sendMessageToMistral(messages, mistralProviderInstance);
       default:
         throw new Error(`Unsupported provider: ${provider}`);
     }

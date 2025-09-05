@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "node node_modules/next/dist/bin/next dev",
     "redev": "powershell -Command \"Write-Host '🚀 Starting development server...' -ForegroundColor Green; Write-Host '⏱️  Countdown: 20 seconds' -ForegroundColor Yellow; for ($i=19; $i -gt 0; $i--) { Start-Sleep 1; Write-Host \"⏱️  Countdown: $i seconds\" -ForegroundColor Yellow }; Write-Host '🎉 Opening browser...' -ForegroundColor Green; Start-Process 'chrome' 'http://localhost:3000'; next dev -p 3000\"",
-    "build": "next build",
+    "build": "node node_modules/next/dist/bin/next build",
     "start": "next start",
     "lint": "next lint"
   },

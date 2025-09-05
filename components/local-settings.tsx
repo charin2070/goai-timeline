@@ -32,7 +32,7 @@ import {
   Save,
   X
 } from 'lucide-react';
-import { AIProvider } from '@/lib/types';
+import { AIProvider, AI_PROVIDERS } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 
 interface LocalSettingsProps {
@@ -214,6 +214,7 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
                   <AiProviderDropdown
                     selectedProvider={settings.selectedProvider}
                     onProviderChange={handleProviderChange}
+                    availableProviders={AI_PROVIDERS}
                     showStatus={true}
                     compact={false}
                   />

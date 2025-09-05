@@ -9,7 +9,7 @@ const MAX_TOKENS = process.env.AI_MAX_TOKENS;
 
 export async function sendMessageToMistral(
   messages: { role: string; content: string }[],
-  provider: AIProvider
+  provider: AiProvider
 ): Promise<ReadableStream<Uint8Array>> {
 
 
@@ -114,7 +114,7 @@ export class MistralProvider implements AiProvider {
   }
 
   async sendMessage(messages: { role: string; content: string }[]): Promise<ReadableStream<Uint8Array>> {
-    return sendMessageToMistral(messages);
+    return sendMessageToMistral(messages, this);
   }
 
   setTemperature(value: number): void {

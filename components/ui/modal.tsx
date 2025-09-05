@@ -32,12 +32,15 @@ const ModalBody: React.FC<ModalBodyProps> = ({ children }) => {
   return <div className="flex-1 overflow-y-auto p-6 bg-gray-50 min-h-[500px] transition-all duration-300 ease-in-out">{children}</div>;
 };
 
+import clsx from 'clsx';
+
 interface ModalFooterProps {
   children: React.ReactNode;
+  className?: string;
 }
 
-const ModalFooter: React.FC<ModalFooterProps> = ({ children }) => {
-  return <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-white">{children}</div>;
+const ModalFooter: React.FC<ModalFooterProps> = ({ children, className }) => {
+  return <div className={clsx("flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-white", className)}>{children}</div>;
 };
 
 interface ModalComponent extends React.FC<ModalProps> {

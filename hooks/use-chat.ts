@@ -3,12 +3,14 @@
 import { useState, useCallback, useRef } from 'react';
 import { ChatMessage } from '@/lib/types';
 import { useAIProviderContext } from '@/lib/ai-provider-context';
+import { useSettings } from '@/lib/settings-context';
 import { toast } from 'sonner';
 
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const { systemPrompt } = useSettings();
   
   const {
     selectedProvider,
@@ -61,12 +63,19 @@ export function useChat() {
           content: msg.content,
         }));
 
+        if (systemPrompt) {
+          apiMessages.unshift({
+            role: 'system',
+            content: systemPrompt,
+          });
+        }
+
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             messages: apiMessages,
             provider: selectedProvider 
           }),
@@ -169,7 +178,7 @@ export function useChat() {
     };
 
     send(content);
-  }, [messages, isLoading, selectedProvider, isProviderLoading]);
+  }, [messages, isLoading, selectedProvider, isProviderLoading, systemPrompt]);
 
   const clearChat = useCallback(() => {
     // Abort any ongoing request

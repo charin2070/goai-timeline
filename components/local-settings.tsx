@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { AiProviderDropdown } from './chat/ai-provider-dropdown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
-
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Modal from '@/components/ui/modal';
@@ -33,7 +32,7 @@ import {
   X
 } from 'lucide-react';
 import { AIProvider, AI_PROVIDERS } from '@/lib/types';
-import { createClient } from '@/lib/supabase/client';
+import { useSettings } from '@/lib/settings-context';
 
 interface LocalSettingsProps {
   isOpen: boolean;
@@ -41,40 +40,30 @@ interface LocalSettingsProps {
 }
 
 interface SettingsState {
-  // AI Settings
   selectedProvider: AIProvider;
   temperature: number;
   maxTokens: number;
-  systemPrompt: string;
-  
-  // UI Settings
   theme: 'light' | 'dark' | 'auto';
   language: 'ru' | 'en';
   fontSize: 'small' | 'medium' | 'large';
   compactMode: boolean;
-  
-  // Notifications
   soundEnabled: boolean;
   desktopNotifications: boolean;
   emailNotifications: boolean;
-  
-  // Privacy & Security
   saveHistory: boolean;
   encryptData: boolean;
   autoLogout: number;
-  
-  // Performance
   streamingEnabled: boolean;
   cacheEnabled: boolean;
   preloadModels: boolean;
 }
 
 export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
+  const { systemPrompt, setSystemPrompt } = useSettings();
   const [settings, setSettings] = useState<SettingsState>({
     selectedProvider: 'google-gemma',
     temperature: 0.7,
     maxTokens: 2048,
-    systemPrompt: 'Ты полезный AI-ассистент. Отвечай на русском языке, будь вежливым и информативным.',
     theme: 'auto',
     language: 'ru',
     fontSize: 'medium',
@@ -93,13 +82,6 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('ai');
 
-  useEffect(() => {
-    const storedPrompt = localStorage.getItem('systemPrompt');
-    if (storedPrompt) {
-      setSettings(prev => ({ ...prev, systemPrompt: storedPrompt }));
-    }
-  }, []);
-
   const updateSetting = useCallback(<K extends keyof SettingsState>(
     key: K, 
     value: SettingsState[K]
@@ -109,8 +91,8 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
   }, []);
 
   const handleSystemPromptChange = (value: string) => {
-    updateSetting('systemPrompt', value);
-    localStorage.setItem('systemPrompt', value);
+    setSystemPrompt(value);
+    setHasChanges(true);
   }
 
   const handleProviderChange = useCallback((provider: AIProvider) => {
@@ -119,21 +101,18 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
 
   const handleSave = useCallback(async () => {
     try {
-      // Здесь будет логика сохранения настроек в базу данных
-      console.log('Saving settings:', settings);
+      console.log('Saving settings:', { ...settings, systemPrompt });
       setHasChanges(false);
-      // Показать уведомление об успешном сохранении
     } catch (error) {
       console.error('Error saving settings:', error);
     }
-  }, [settings]);
+  }, [settings, systemPrompt]);
 
   const handleReset = useCallback(() => {
     setSettings({
       selectedProvider: 'google-gemma',
       temperature: 0.7,
       maxTokens: 2048,
-      systemPrompt: 'Ты полезный AI-ассистент. Отвечай на русском языке, будь вежливым и информативным.',
       theme: 'auto',
       language: 'ru',
       fontSize: 'medium',
@@ -148,8 +127,9 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
       cacheEnabled: true,
       preloadModels: false
     });
+    setSystemPrompt('You AI assistant.');
     setHasChanges(true);
-  }, []);
+  }, [setSystemPrompt]);
 
   const handleClose = useCallback(() => {
     if (hasChanges) {
@@ -192,7 +172,7 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
           <TabsList className="grid w-full grid-cols-5 mb-6 bg-muted text-muted-foreground">
             <TabsTrigger value="ai" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
               <Bot className="w-4 h-4" />
-              <span className="hidden sm:inline">Анализ</span>
+              <span className="hidden sm:inline">AI</span>
             </TabsTrigger>
             <TabsTrigger value="systemPrompt" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
               <Bot className="w-4 h-4" />
@@ -291,7 +271,7 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Textarea
-                    value={settings.systemPrompt}
+                    value={systemPrompt}
                     onChange={(e) => handleSystemPromptChange(e.target.value)}
                     rows={15}
                     placeholder="Введите инструкции для ИИ..."

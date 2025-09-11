@@ -15,6 +15,9 @@
       <p>
         GoAI Timeline is an AIOps-powered tool designed to streamline incident analysis by automatically processing and visualizing data from logs, chats, and monitoring systems.
         It solves the "information noise" problem in modern IT systems, which makes finding the root cause of a failure a time-consuming and manual process.
+        Main feature: generation POML-prompt from user logs and sending to AI.
+        Example of resulting POML-prompt: "You are an experienced engineer specializing in finding and fixing problems in applications. 
+Your task is ** based on the data provided by the user (logs, correspondence from work chats, information about the system, etc.) to find the exact root cause of all errors** by analyzing the entire context, and not just specify the stack of exceptions."
       </p>
     </section>
 

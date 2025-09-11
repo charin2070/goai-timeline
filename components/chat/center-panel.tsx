@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
 interface CenterPanelProps {
-  setPamlPrompt: (prompt: string) => void;
+  setPomlPrompt: (prompt: string) => void;
 }
 
 const defaultSystemPrompt = `Ты — опытный .NET инженер, разбирающийся в микросервисах на Linux, Windows, MacOS, Android и iOS. 
@@ -44,7 +44,7 @@ const defaultSystemPrompt = `Ты — опытный .NET инженер, раз
 - Пиши на русском языке.
 `;
 
-export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
+export function CenterPanel({ setPomlPrompt }: CenterPanelProps) {
   const { files, selectedFile } = useFileContext();
   const [isOptimized, setIsOptimized] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState(defaultSystemPrompt);
@@ -94,8 +94,8 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
         : selectedFile.content)
     : '';
 
-  const generatePAMLPrompt = () => {
-    let prompt = '<PAML>\n';
+  const generatePOMLPrompt = () => {
+    let prompt = '<poml>\n';
     prompt += `  <SystemPrompt>\n${systemPrompt}\n  </SystemPrompt>\n`;
     
     files.forEach(file => {
@@ -111,17 +111,17 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
       prompt += '  </Log>\n';
     });
 
-    prompt += '</PAML>';
+    prompt += '</poml>';
     return prompt;
   };
 
   useEffect(() => {
-    const newPrompt = generatePAMLPrompt();
-    setPamlPrompt(newPrompt);
+    const newPrompt = generatePOMLPrompt();
+    setPomlPrompt(newPrompt);
   }, [files, isOptimized, systemPrompt]);
 
   const handleCopyPrompt = () => {
-    const promptContent = generatePAMLPrompt();
+    const promptContent = generatePOMLPrompt();
     navigator.clipboard.writeText(promptContent);
     toast.success('Промпт скопирован в буфер обмена');
   };
@@ -139,8 +139,8 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
       <Tabs defaultValue="logContent" className="flex flex-col flex-1">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="logContent">Содержимое лога</TabsTrigger>
-          <TabsTrigger value="pamlPrompt" className="flex items-center gap-1">
-            PAML промпт
+          <TabsTrigger value="pomlPrompt" className="flex items-center gap-1">
+            POML промпт
             <Button variant="ghost" size="icon" onClick={handleCopyPrompt} className="h-6 w-6">
               <Copy className="h-4 w-4" />
             </Button>
@@ -164,7 +164,7 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
             </div>
           )}
         </TabsContent>
-        <TabsContent value="pamlPrompt" className="flex-1 overflow-y-auto bg-card rounded-lg">
+        <TabsContent value="pomlPrompt" className="flex-1 overflow-y-auto bg-card rounded-lg">
           <SyntaxHighlighter 
             language="xml"
             style={prism}
@@ -172,7 +172,7 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
             wrapLines={true}
             wrapLongLines={true}
           >
-            {generatePAMLPrompt()}
+            {generatePOMLPrompt()}
           </SyntaxHighlighter>
         </TabsContent>
         <TabsContent value="systemPrompt" className="flex-1 overflow-y-auto bg-card rounded-lg min-h-0">

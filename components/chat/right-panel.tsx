@@ -48,9 +48,11 @@ export function RightPanel({
   };
 
   return (
-    <div className="flex flex-col h-full p-4 bg-background">
-      <h2 className="text-lg font-semibold mb-4">Анализ</h2>
-      <div className="flex-1 flex flex-col min-h-0">
+    <div className="flex flex-col h-full bg-background">
+      <div className="p-4">
+        <h2 className="text-lg font-semibold">Анализ</h2>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4">
         <MessageList 
           messages={messages} 
           isTyping={isTyping} 
@@ -58,7 +60,7 @@ export function RightPanel({
           onEditMessage={handleEditMessage}
         />
       </div>
-      <div className="mt-4">
+      <div className="p-4 bg-background/80 backdrop-blur-sm border-t border-border">
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <Button onClick={handleSendPrompt} className="w-full mb-2">Анализировать</Button>
         </motion.div>

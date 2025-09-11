@@ -19,10 +19,11 @@ import { useState } from 'react';
 import { AppNavbar } from '@/components/app-navbar';
 import { motion } from 'framer-motion';
 import { LocalSettings } from '@/components/local-settings';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function ChatContent() {
   const { session, status, isLoading } = useAuth();
-  const [pamlPrompt, setPamlPrompt] = useState('');
+  const [pomlPrompt, setPomlPrompt] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const {
@@ -50,21 +51,48 @@ function ChatContent() {
     <ChatFunctionsProvider sendMessage={sendMessage} clearChat={clearChat}>
       <div className="flex h-screen flex-col bg-background text-foreground">
         <AppNavbar onToggleSidebar={() => setIsSettingsOpen(true)} />
-        <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={20}>
-            <motion.div initial={{ x: -200, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, ease: "easeInOut" }}>
+
+        {/* Desktop layout */}
+        <div className="hidden md:flex h-full">
+          <ResizablePanelGroup direction="horizontal">
+            <ResizablePanel defaultSize={20}>
+              <motion.div initial={{ x: -200, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, ease: "easeInOut" }}>
+                <LeftPanel />
+              </motion.div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={40}>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2, ease: "easeInOut" }} className="h-full">
+                <CenterPanel setPomlPrompt={setPomlPrompt} />
+              </motion.div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={40}>
+              <motion.div initial={{ x: 200, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="h-full">
+                <RightPanel 
+                  messages={messages}
+                  isTyping={chatLoading}
+                  onRepeatMessage={repeatMessage}
+                  editMessage={editMessage}
+                  onSendMessage={sendMessage}
+                  onClearChat={clearChat}
+                  initialPrompt={pomlPrompt}
+                />
+              </motion.div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+
+        {/* Mobile layout */}
+        <div className="md:hidden h-full">
+          <Tabs defaultValue="chat" className="h-full flex flex-col">
+            <TabsContent value="files" className="flex-1 overflow-y-auto">
               <LeftPanel />
-            </motion.div>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={40}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2, ease: "easeInOut" }} className="h-full">
-              <CenterPanel setPamlPrompt={setPamlPrompt} />
-            </motion.div>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={40}>
-            <motion.div initial={{ x: 200, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, ease: "easeInOut" }}>
+            </TabsContent>
+            <TabsContent value="poml" className="flex-1 overflow-y-auto">
+              <CenterPanel setPomlPrompt={setPomlPrompt} />
+            </TabsContent>
+            <TabsContent value="chat" className="flex-1 overflow-y-auto">
               <RightPanel 
                 messages={messages}
                 isTyping={chatLoading}
@@ -72,11 +100,17 @@ function ChatContent() {
                 editMessage={editMessage}
                 onSendMessage={sendMessage}
                 onClearChat={clearChat}
-                initialPrompt={pamlPrompt}
+                initialPrompt={pomlPrompt}
               />
-            </motion.div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+            </TabsContent>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="files">Files</TabsTrigger>
+              <TabsTrigger value="poml">PAML</TabsTrigger>
+              <TabsTrigger value="chat">Chat</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
         <LocalSettings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       </div>
     </ChatFunctionsProvider>

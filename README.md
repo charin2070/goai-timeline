@@ -195,9 +195,7 @@ Create a `.env.local` file in the root directory with the following variables:
 - **AI_MAX_TOKENS**: Maximum tokens in response (default: 1000)
 - **NEXT_PUBLIC_APP_NAME**: The name of your application (displayed in UI)
 - **NEXT_PUBLIC_APP_URL**: The base URL of your application
-- **NEXT_PUBLIC_SPINNER_SPEED**: Speed of Tetris spinner animation in milliseconds (default: 300ms)
-- **GOOGLE_CLIENT_ID**: Google OAuth client ID for authentication
-- **GOOGLE_CLIENT_SECRET**: Google OAuth client secret for authentication
+- **NEXT_PUBLIC_SPINNER_SPEED**: Speed of Tetris spinner anim ntication
 - **NEXTAUTH_SECRET**: Secret key for NextAuth.js session encryption
 - **NEXTAUTH_URL**: The base URL for NextAuth.js callbacks
 

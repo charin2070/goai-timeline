@@ -51,12 +51,10 @@ export function FileSidebar() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
-        const newFile = {
-          id: Date.now().toString(),
+        addFile({
           name: file.name,
           content,
-        };
-        addFile(newFile);
+        });
       };
       reader.readAsText(file);
     }

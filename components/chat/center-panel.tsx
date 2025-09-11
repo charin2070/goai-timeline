@@ -50,15 +50,23 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
   const [systemPrompt, setSystemPrompt] = useState(defaultSystemPrompt);
 
   useEffect(() => {
-    const storedPrompt = localStorage.getItem('systemPrompt');
+    const storedPrompt = localStorage.getItem("systemPrompt");
     if (storedPrompt) {
-      setSystemPrompt(storedPrompt);
+        setSystemPrompt(storedPrompt);
     }
-  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('systemPrompt', systemPrompt);
-  }, [systemPrompt]);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'systemPrompt' && e.newValue) {
+        setSystemPrompt(e.newValue);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const getLanguage = (fileName: string) => {
     const fileType = getFileType(fileName);
@@ -144,10 +152,9 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
             <SyntaxHighlighter 
               language={getLanguage(selectedFile.name)} 
               style={getStyle(selectedFile.name)} 
-              customStyle={{ background: 'transparent', width: '100%', textShadow: 'none' }}
+              customStyle={{ background: 'transparent', width: '100%', height: '100%', textShadow: 'none' }}
               wrapLines={true}
               wrapLongLines={true}
-              className="overflow-y-auto"
             >
               {displayedContent}
             </SyntaxHighlighter>
@@ -157,14 +164,18 @@ export function CenterPanel({ setPamlPrompt }: CenterPanelProps) {
             </div>
           )}
         </TabsContent>
-        <TabsContent value="pamlPrompt" className="flex-1 overflow-y-auto bg-card rounded-lg p-4 min-h-0">
-          <textarea
-            className="w-full h-full bg-transparent text-foreground focus:outline-none resize-none overflow-y-auto"
-            readOnly
-            value={generatePAMLPrompt()}
-          />
+        <TabsContent value="pamlPrompt" className="flex-1 overflow-y-auto bg-card rounded-lg">
+          <SyntaxHighlighter 
+            language="xml"
+            style={prism}
+            customStyle={{ background: 'transparent', width: '100%', height: '100%', textShadow: 'none' }}
+            wrapLines={true}
+            wrapLongLines={true}
+          >
+            {generatePAMLPrompt()}
+          </SyntaxHighlighter>
         </TabsContent>
-        <TabsContent value="systemPrompt" className="flex-1 overflow-y-auto bg-card rounded-lg p-4 min-h-0">
+        <TabsContent value="systemPrompt" className="flex-1 overflow-y-auto bg-card rounded-lg min-h-0">
           <textarea
             className="w-full h-full bg-transparent text-foreground focus:outline-none resize-none overflow-y-auto"
             value={systemPrompt}

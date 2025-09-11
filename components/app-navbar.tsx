@@ -17,7 +17,7 @@ export function AppNavbar({ className, onToggleSidebar }: AppNavbarProps) {
       <NavbarSection>
         <div className="flex items-center gap-2">
           <Bot className="w-6 h-6 text-primary" />
-          <h1 className="text-lg font-semibold text-foreground">GoAI Timeline</h1>
+          <h1 className="text-lg font-semibold text-foreground">Инциденты</h1>
         </div>
       </NavbarSection>
       

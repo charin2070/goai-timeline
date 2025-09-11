@@ -16,11 +16,14 @@ import { LeftPanel } from '@/components/chat/left-panel';
 import { CenterPanel } from '@/components/chat/center-panel';
 import { RightPanel } from '@/components/chat/right-panel';
 import { useState } from 'react';
+import { AppNavbar } from '@/components/app-navbar';
 import { motion } from 'framer-motion';
+import { LocalSettings } from '@/components/local-settings';
 
 function ChatContent() {
   const { session, status, isLoading } = useAuth();
   const [pamlPrompt, setPamlPrompt] = useState('');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const {
     messages,
@@ -46,6 +49,7 @@ function ChatContent() {
   return (
     <ChatFunctionsProvider sendMessage={sendMessage} clearChat={clearChat}>
       <div className="flex h-screen flex-col bg-background text-foreground">
+        <AppNavbar onToggleSidebar={() => setIsSettingsOpen(true)} />
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={20}>
             <motion.div initial={{ x: -200, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.5, ease: "easeInOut" }}>
@@ -54,7 +58,7 @@ function ChatContent() {
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={40}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2, ease: "easeInOut" }}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.2, ease: "easeInOut" }} className="h-full">
               <CenterPanel setPamlPrompt={setPamlPrompt} />
             </motion.div>
           </ResizablePanel>
@@ -73,6 +77,7 @@ function ChatContent() {
             </motion.div>
           </ResizablePanel>
         </ResizablePanelGroup>
+        <LocalSettings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       </div>
     </ChatFunctionsProvider>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, forwardRef, useRef, useEffect } from "react";
+import React, { useState, useImperativeHandle, forwardRef, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Send, Trash2 } from "lucide-react";
 import DropButton from '@/components/ui/drop-button';
@@ -34,13 +34,6 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
     },
   }));
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [inputValue]);
-
   const handleSendMessage = () => {
     if (inputValue.trim()) {
       onSendMessage(inputValue);
@@ -56,15 +49,13 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="relative">
+    <div className="w-full max-w-2xl mx-auto h-full flex flex-col">
+      <div className="relative flex-1">
         <textarea
           ref={textareaRef}
           dir="auto"
           aria-label="Опишите детали..."
-          className="w-full px-3 pr-4 pt-5 bg-input border border-border rounded-xl focus:outline-none text-foreground align-bottom resize-none text-sm"
-          style={{ maxHeight: "200px" }}
-          rows={1}
+          className="w-full h-full px-3 pr-4 pt-5 bg-input border border-border rounded-xl focus:outline-none text-foreground align-bottom resize-none text-sm"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}

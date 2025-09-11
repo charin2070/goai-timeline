@@ -30,8 +30,8 @@ export function MessageList({ messages, isTyping, onRepeatMessage, onEditMessage
   }, [messages, isTyping]);
 
   return (
-    <ScrollArea ref={scrollAreaRef} className="flex-1 overflow-y-auto">
-      <div className="h-full">
+    <ScrollArea ref={scrollAreaRef} className="flex-1 overflow-y-auto h-[500px]">
+      <div>
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4 py-24">
             <p className="text-muted-foreground text-lg font-light">

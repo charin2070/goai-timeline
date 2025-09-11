@@ -93,6 +93,13 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('ai');
 
+  useEffect(() => {
+    const storedPrompt = localStorage.getItem('systemPrompt');
+    if (storedPrompt) {
+      setSettings(prev => ({ ...prev, systemPrompt: storedPrompt }));
+    }
+  }, []);
+
   const updateSetting = useCallback(<K extends keyof SettingsState>(
     key: K, 
     value: SettingsState[K]
@@ -100,6 +107,11 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
     setSettings(prev => ({ ...prev, [key]: value }));
     setHasChanges(true);
   }, []);
+
+  const handleSystemPromptChange = (value: string) => {
+    updateSetting('systemPrompt', value);
+    localStorage.setItem('systemPrompt', value);
+  }
 
   const handleProviderChange = useCallback((provider: AIProvider) => {
     updateSetting('selectedProvider', provider);
@@ -160,7 +172,7 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
                 Настройки приложения
               </span>
             </Modal.Title>
-            <p className="text-sm text-muted-foreground mt-1">Настройки могут сохраняться на сервере</p>
+            <p className="text-sm text-muted-foreground mt-1">Настройки могут сохраняться в браузере</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -177,10 +189,14 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
       
       <Modal.Body>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted text-muted-foreground">
+          <TabsList className="grid w-full grid-cols-5 mb-6 bg-muted text-muted-foreground">
             <TabsTrigger value="ai" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
               <Bot className="w-4 h-4" />
               <span className="hidden sm:inline">Анализ</span>
+            </TabsTrigger>
+            <TabsTrigger value="systemPrompt" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
+              <Bot className="w-4 h-4" />
+              <span className="hidden sm:inline">Системный промпт</span>
             </TabsTrigger>
             <TabsTrigger value="interface" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
               <Palette className="w-4 h-4" />
@@ -255,20 +271,32 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
                       Максимальная длина ответа ИИ. Больше токенов = более длинные ответы.
                     </p>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-foreground">Системный промпт</Label>
-                    <Textarea
-                      value={settings.systemPrompt}
-                      onChange={(e) => updateSetting('systemPrompt', e.target.value)}
-                      rows={4}
-                      placeholder="Введите инструкции для ИИ..."
-                      className="bg-input text-foreground border-border focus:ring-ring focus:border-primary"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Базовые инструкции, которые определяют поведение ИИ.
-                    </p>
-                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* System Prompt Tab */}
+          <TabsContent value="systemPrompt" className="space-y-6 animate-in fade-in-0 duration-300">
+            <Card className="bg-card text-card-foreground border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Bot className="w-5 h-5" />
+                  Системный промпт
+                </CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Базовые инструкции, которые определяют контекст AI.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Textarea
+                    value={settings.systemPrompt}
+                    onChange={(e) => handleSystemPromptChange(e.target.value)}
+                    rows={15}
+                    placeholder="Введите инструкции для ИИ..."
+                    className="bg-input text-foreground border-border focus:ring-ring focus:border-primary"
+                  />
                 </div>
               </CardContent>
             </Card>

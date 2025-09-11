@@ -6,22 +6,37 @@ export interface AppFile {
   id: string;
   name: string;
   content: string;
+  originalContent: string;
   os: string;
   app: string;
   server: string;
 }
 
+const generatePamlContent = (file: Omit<AppFile, 'id' | 'content'>) => {
+  return `<poml>
+  <context>
+    <document src="${file.name}" os="${file.os}" app="${file.app}" server="${file.server}">
+      ${file.originalContent}
+    </document>
+  </context>
+</poml>`;
+};
+
 export function useFiles() {
   const [files, setFiles] = useState<AppFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<AppFile | null>(null);
 
-  const addFile = useCallback((file: Omit<AppFile, 'os' | 'app' | 'server'>) => {
-    const newFile = {
+  const addFile = useCallback((file: Omit<AppFile, 'os' | 'app' | 'server' | 'content' | 'originalContent'> & { content: string }) => {
+    const newFile: AppFile = {
       ...file,
-      os: 'Linux', // Default OS
-      app: '.NET application', // Default App
-      server: 'Backend' // Default Server
+      id: Date.now().toString(),
+      originalContent: file.content,
+      content: '',
+      os: 'Linux',
+      app: '.NET application',
+      server: 'Backend'
     };
+    newFile.content = generatePamlContent(newFile);
     setFiles(prev => [...prev, newFile]);
   }, []);
 
@@ -34,10 +49,15 @@ export function useFiles() {
     setSelectedFile(file);
   }, [files]);
 
-  const updateFile = useCallback((fileId: string, updates: Partial<AppFile>) => {
-    setFiles(prev => prev.map(file => 
-      file.id === fileId ? { ...file, ...updates } : file
-    ));
+  const updateFile = useCallback((fileId: string, updates: Partial<Omit<AppFile, 'originalContent' | 'content'>>) => {
+    setFiles(prev => prev.map(file => {
+      if (file.id === fileId) {
+        const updatedFile = { ...file, ...updates };
+        updatedFile.content = generatePamlContent(updatedFile);
+        return updatedFile;
+      }
+      return file;
+    }));
   }, []);
 
   return {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { useFileContext } from '@/lib/file-context';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import oneLight from 'react-syntax-highlighter/dist/esm/styles/prism/one-light';
@@ -36,7 +36,7 @@ import clsx from 'clsx';
 import { MessageList } from './message-list';
 import QueryPanel, { QueryPanelRef } from './query-panel';
 import { ChatMessage } from '@/lib/types';
-import { EventViewerModal } from './event-viewer-modal';
+import { EventViewerContainer } from './event-viewer-container';
 import { LogEvent } from '@/lib/log-parser';
 
 interface CenterPanelProps {
@@ -48,6 +48,8 @@ interface CenterPanelProps {
   onSendMessage: (message: string) => void;
   onClearChat: () => void;
   initialPrompt: string;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
 }
 
 const defaultSystemPrompt = `Ты — опытный .NET инженер, разбирающийся в микросервисах на Linux, Windows, MacOS, Android и iOS. 
@@ -73,7 +75,11 @@ const defaultSystemPrompt = `Ты — опытный .NET инженер, раз
 - Пиши на русском языке.
 `;
 
-export function CenterPanel({
+export interface CenterPanelRef {
+  handleAddFileClick: () => void;
+}
+
+export const CenterPanel = forwardRef<CenterPanelRef, CenterPanelProps>(({ 
   setPomlPrompt, 
   messages, 
   isTyping, 
@@ -81,15 +87,16 @@ export function CenterPanel({
   editMessage, 
   onSendMessage, 
   onClearChat,
-  initialPrompt
-}: CenterPanelProps) {
+  initialPrompt,
+  activeTab,
+  onTabChange
+}, ref) => {
   const { files, selectedFile, addFile, removeFile, selectFile, updateFile } = useFileContext();
   const [isOptimized, setIsOptimized] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState(defaultSystemPrompt);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryPanelRef = useRef<QueryPanelRef>(null);
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [eventsToShow, setEventsToShow] = useState<LogEvent[]>([]);
+  const [apiEvents, setApiEvents] = useState<LogEvent[]>([]);
 
   useEffect(() => {
     const storedPrompt = localStorage.getItem("systemPrompt");
@@ -111,15 +118,28 @@ export function CenterPanel({
   }, []);
 
   useEffect(() => {
+    const fetchApiEvents = async () => {
+      try {
+        const response = await fetch('/api/add-event');
+        if (response.ok) {
+          const data = await response.json();
+          setApiEvents(data.events || []);
+        } else {
+          console.error('Failed to fetch API events:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching API events:', error);
+      }
+    };
+
+    fetchApiEvents();
+  }, []);
+
+  useEffect(() => {
     if (initialPrompt && queryPanelRef.current) {
       queryPanelRef.current.setInputValue(initialPrompt);
     }
   }, [initialPrompt]);
-
-  const handleShowEvents = (events: LogEvent[]) => {
-    setEventsToShow(events);
-    setShowEventModal(true);
-  };
 
   const handleSendPrompt = () => {
     if (initialPrompt) {
@@ -137,6 +157,10 @@ export function CenterPanel({
   const handleAddFileClick = () => {
     fileInputRef.current?.click();
   };
+
+  useImperativeHandle(ref, () => ({
+    handleAddFileClick,
+  }));
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -215,6 +239,31 @@ export function CenterPanel({
         : selectedFile.originalContent)
     : '';
 
+    // Returns POML strind with LogEvent
+  const logEventToPoml = (event: LogEvent): string => {
+    let poml = '  <LogEvent>\n';
+    if (event.created_at) poml += `    <Timestamp>${event.created_at}</Timestamp>\n`;
+    if (event.event_type) poml += `    <EventType>${event.event_type}</EventType>\n`;
+    if (event.status) poml += `    <Status>${event.status}</Status>\n`;
+    if (event.host) poml += `    <Host>${event.host}</Host>\n`;
+    if (event.service) poml += `    <Service>${event.service}</Service>\n`;
+    if (event.application) poml += `    <Application>${event.application}</Application>\n`;
+    if (event.correlation_id) poml += `    <CorrelationId>${event.correlation_id}</CorrelationId>\n`;
+    if (event.source) poml += `    <Source>${event.source}</Source>\n`;
+    if (event.user_id) poml += `    <UserId>${event.user_id}</UserId>\n`;
+    if (event.business_process) poml += `    <BusinessProcess>${event.business_process}</BusinessProcess>\n`;
+    if (event.anomalyLevel) poml += `    <AnomalyLevel>${event.anomalyLevel}</AnomalyLevel>\n`;
+    if (event.payload) {
+      poml += `    <Payload>\n`;
+      // Stringify payload content, indenting it
+      const payloadString = JSON.stringify(event.payload, null, 2);
+      poml += payloadString.split('\n').map(line => `      ${line}`).join('\n') + '\n';
+      poml += `    </Payload>\n`;
+    }
+    poml += '  </LogEvent>\n';
+    return poml;
+  };
+
   const generatePOMLPrompt = () => {
     let prompt = '<poml>\n';
     prompt += `  <SystemPrompt>\n${systemPrompt}\n  </SystemPrompt>\n`;
@@ -225,12 +274,9 @@ export function CenterPanel({
         : file.originalContent;
 
       prompt += '  <Log>\n';
-      prompt += `<OS>${file.platform}</OS>
-`;
-      prompt += `    <Application>${file.application}</Application>
-`;
-      prompt += `    <Server>${file.service}</Server>
-`;
+      prompt += `<OS>${file.platform}</OS>\n`;
+      prompt += `    <Application>${file.application}</Application>\n`;
+      prompt += `    <Server>${file.service}</Server>\n`;
       prompt += `    <LogContent>\n${logContent}\n    </LogContent>\n`;
       prompt += '  </Log>\n';
     });
@@ -250,10 +296,14 @@ export function CenterPanel({
     toast.success('Промпт скопирован в буфер обмена');
   };
 
+  const allEvents = useMemo(() => {
+    return [...files.flatMap(file => file.events), ...apiEvents];
+  }, [files, apiEvents]);
+
   return (
     <div className="flex flex-col h-full p-4 bg-background">
-      <Tabs defaultValue="logContent" className="flex flex-col flex-1">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs value={activeTab} onValueChange={onTabChange} className="flex flex-col flex-1">
+        {/* <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="files">Файлы</TabsTrigger>
           <TabsTrigger value="logContent">Содержимое лога</TabsTrigger>
           <TabsTrigger value="pomlPrompt" className="flex items-center gap-1" onClick={handleCopyPrompt}>
@@ -262,7 +312,8 @@ export function CenterPanel({
           </TabsTrigger>
           <TabsTrigger value="systemPrompt">Системный промпт</TabsTrigger>
           <TabsTrigger value="analysis">Анализ</TabsTrigger>
-        </TabsList>
+          <TabsTrigger value="events">События</TabsTrigger>
+        </TabsList> */}
         <TabsContent value="files" className="flex-1 overflow-y-auto bg-card rounded-lg">
           <div className="flex flex-col h-full">
             <div className="flex justify-between items-center p-4">
@@ -355,7 +406,7 @@ export function CenterPanel({
                           className="cursor-pointer hover:underline"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleShowEvents(file.events);
+                            onTabChange('events');
                           }}
                         >
                           {file.eventCount}
@@ -421,16 +472,22 @@ export function CenterPanel({
             </div>
           </div>
         </TabsContent>
+        <TabsContent value="events" className="flex-1 overflow-y-auto bg-card rounded-lg">
+          <div className="flex flex-col h-full">
+            <div className="flex justify-between items-center p-4">
+              <h2 className="text-lg font-semibold">События</h2>
+            </div>
+            <EventViewerContainer
+              events={allEvents}
+              selectedFile={selectedFile}
+              getLanguage={getLanguage}
+              getStyle={getStyle}
+              displayedContent={displayedContent}
+            />
+          </div>
+        </TabsContent>
       </Tabs>
-      <EventViewerModal 
-        isOpen={showEventModal}
-        onClose={() => setShowEventModal(false)}
-        events={eventsToShow}
-        selectedFile={selectedFile}
-        getLanguage={getLanguage}
-        getStyle={getStyle}
-        displayedContent={displayedContent}
-      />
+      
     </div>
   );
-}
+})

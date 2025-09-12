@@ -65,6 +65,19 @@ export class LogParser {
       }
     }
     
+    // New check for rawOperationalData
+    const eventsToProcessForOperationalData = [...finalEvents]; // Create a copy to avoid modifying while iterating
+    for (const event of eventsToProcessForOperationalData) {
+      if (event.payload && typeof event.payload.rawOperationalData === 'string') {
+        try {
+          const operationalDataEvents = this.getEventsFromOperationData(event.payload.rawOperationalData);
+          finalEvents.push(...operationalDataEvents);
+        } catch (e) {
+          console.error('Error parsing rawOperationalData:', e);
+        }
+      }
+    }
+
     return finalEvents;
   }
 
@@ -264,5 +277,65 @@ export class LogParser {
           application: null,
         } as LogEvent;
       });
+  }
+
+  public getEventsFromOperationData(operationDataString: string): LogEvent[] {
+    const events: LogEvent[] = [];
+
+    let parsedData: Record<string, any>;
+
+    try {
+      parsedData = JSON.parse(operationDataString);
+    } catch (e) {
+      // If it's not valid JSON, treat the whole string as a message
+      events.push({
+        event_type: 'OperationData',
+        source: 'OperationDataParser',
+        user_id: null,
+        payload: { message: operationDataString },
+        status: 'info',
+        correlation_id: null,
+        created_at: new Date().toISOString(),
+        host: null,
+        service: null,
+        business_process: null,
+        application: null,
+      });
+      return events;
+    }
+
+    // Create a base event from the parsed data
+    const baseEvent: LogEvent = {
+      event_type: parsedData.eventType || 'OperationData', // ERROR HERE
+      source: parsedData.source || 'OperationDataParser',
+      user_id: parsedData.userId || null,
+      payload: parsedData, // The entire parsed object is the payload
+      status: parsedData.status || 'info',
+      correlation_id: parsedData.correlationId || null,
+      created_at: parsedData.timestamp || new Date().toISOString(),
+      host: parsedData.host || null,
+      service: parsedData.service || null,
+      business_process: parsedData.businessProcess || null,
+      application: parsedData.application || null,
+    };
+    events.push(baseEvent);
+
+    // Recursively parse nested log content if found
+    if (parsedData) {
+      const logKeys = ['log', 'logs', 'message', 'data']; // Keys that might contain nested logs
+      for (const key of logKeys) {
+        if (parsedData[key] && typeof parsedData[key] === 'string') {
+          try {
+            // Attempt to parse nested content as a log string
+            const nestedEvents = this.parse(parsedData[key]);
+            events.push(...nestedEvents);
+          } catch (e) {
+            // Not a parsable log string, ignore
+          }
+        }
+      }
+    }
+
+    return events;
   }
 }

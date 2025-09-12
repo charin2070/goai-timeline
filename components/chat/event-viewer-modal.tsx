@@ -64,7 +64,10 @@ export function EventViewerModal({ isOpen, onClose, events, selectedFile, getLan
     }
   };
 
-  const getAnomalyLevelIndicator = (level: AnomalyLevel) => {
+  const getAnomalyLevelIndicator = (level: AnomalyLevel | undefined) => {
+    if (level === undefined) {
+      return null; // Handle undefined case
+    }
     switch (level) {
       case 'high':
         return <div className="w-3 h-3 rounded-full bg-red-500"></div>;
@@ -110,11 +113,12 @@ export function EventViewerModal({ isOpen, onClose, events, selectedFile, getLan
   });
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-4xl">
+    <Modal isOpen={isOpen} onClose={onClose} containerClassName="max-w-4xl">
       <Modal.Header>
         <Modal.Title>{selectedFile?.name || 'Event Timeline'}</Modal.Title>
         <div className="flex-grow flex justify-center">
           <Dropdown>
+            
             <DropdownButton outline>
               <div className="flex items-center gap-2">
                 {getSelectedLevelIcon(selectedLevel)}

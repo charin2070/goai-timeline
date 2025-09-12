@@ -7,8 +7,8 @@ import { Loading } from '@/components/ui/loading';
 import { AIProviderWrapper } from '@/lib/ai-provider-context';
 import { FileWrapper, useFileContext } from '@/lib/file-context'; // Import useFileContext
 import { ChatFunctionsProvider } from '@/lib/chat-functions-context';
-import { CenterPanel } from '@/components/chat/center-panel';
-import { useState } from 'react';
+import { CenterPanel, CenterPanelRef } from '@/components/chat/center-panel';
+import { useState, useRef } from 'react';
 import { AppNavbar } from '@/components/app-navbar';
 import { LocalSettings } from '@/components/local-settings';
 import { AppSidebar } from '@/components/chat/app-sidebar';
@@ -23,6 +23,8 @@ function ChatContent() {
   const [pomlPrompt, setPomlPrompt] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { files } = useFileContext(); // Get files from context
+  const [activeTab, setActiveTab] = useState("logContent"); // New state for active tab
+  const centerPanelRef = useRef<CenterPanelRef>(null);
   
   const {
     messages,
@@ -39,6 +41,12 @@ function ChatContent() {
     originalSendMessage(query, files);
   };
 
+  const handleAddFileAction = () => {
+    if (centerPanelRef.current) {
+      centerPanelRef.current.handleAddFileClick();
+    }
+  };
+
   if (isLoading || status === 'loading') {
     return <Loading />;
   }
@@ -53,11 +61,12 @@ function ChatContent() {
         {/* <AppNavbar /> */}
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel defaultSize={20}>
-            <AppSidebar onToggleSettings={() => setIsSettingsOpen(true)} />
+            <AppSidebar onToggleSettings={() => setIsSettingsOpen(true)} onTabChange={setActiveTab} onAddFileAction={handleAddFileAction} fileCount={files.length} />
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={80}>
             <CenterPanel 
+              ref={centerPanelRef}
               setPomlPrompt={setPomlPrompt}
               messages={messages}
               isTyping={chatLoading}
@@ -66,6 +75,8 @@ function ChatContent() {
               onSendMessage={sendMessage}
               onClearChat={clearChat}
               initialPrompt={pomlPrompt}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
             />
           </ResizablePanel>
         </ResizablePanelGroup>

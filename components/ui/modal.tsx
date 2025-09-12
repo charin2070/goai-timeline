@@ -7,6 +7,7 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  containerClassName?: string;
 }
 
 interface ModalHeaderProps {
@@ -49,7 +50,7 @@ interface ModalComponent extends React.FC<ModalProps> {
   Footer: React.FC<ModalFooterProps>;
 }
 
-const ModalBase: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+const ModalBase: React.FC<ModalProps> = ({ isOpen, onClose, children, containerClassName }) => {
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -63,7 +64,7 @@ const ModalBase: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all duration-300"
       onClick={handleBackdropClick}
     >
-      <div className="relative w-full max-w-6xl max-h-[95vh] bg-white rounded-xl shadow-2xl transform transition-all duration-300 scale-100 overflow-hidden">
+      <div className={clsx("relative w-full max-w-6xl max-h-[95vh] bg-white rounded-xl shadow-2xl transform transition-all duration-300 scale-100 overflow-hidden", containerClassName)}>
         {children}
       </div>
     </div>

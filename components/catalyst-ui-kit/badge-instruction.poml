@@ -1,0 +1,68 @@
+<prompt version="1.0">
+  <component name="Badge" source="@/components/badge">
+    <description>
+      Небольшой теговый индикатор для статусов, меток или категорий.
+      Поддерживает цветовую схему Catalyst и может рендериться как <span>, кнопка или ссылка.
+    </description>
+
+    <usage>
+      <example title="Базовое использование">
+        <![CDATA[
+import { Badge } from '@/components/badge'
+
+function Example() {
+  return (
+    <div className="flex gap-3">
+      <Badge color="lime">documentation</Badge>
+      <Badge color="purple">help wanted</Badge>
+      <Badge color="rose">bug</Badge>
+    </div>
+  )
+}
+        ]]>
+      </example>
+
+      <example title="Использование как кнопка">
+        <![CDATA[
+import { BadgeButton } from '@/components/badge'
+
+function Example() {
+  return <BadgeButton>documentation</BadgeButton>
+}
+        ]]>
+      </example>
+
+      <example title="Использование как ссылка">
+        <![CDATA[
+import { BadgeButton } from '@/components/badge'
+
+function Example() {
+  return <BadgeButton href="#">documentation</BadgeButton>
+}
+        ]]>
+      </example>
+    </usage>
+
+    <api>
+      <prop name="color" type="string" default="zinc">
+        Цвет бейджа. Поддерживает 18 вариантов (red, orange, amber, yellow, lime, green,
+        emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink, rose, zinc).
+        Автоматически адаптируется к light/dark теме.
+      </prop>
+      <prop name="href" type="string" default="-">
+        Только для BadgeButton. Если указан, рендерит <a>.
+      </prop>
+    </api>
+
+    <tips>
+      - Используй <Badge> для статичных меток.
+      - Используй <BadgeButton> для интерактивных сценариев (фильтры, навигация).
+      - Комбинируй с Tailwind утилитами (например, flex, gap) для красивого расположения.
+    </tips>
+
+    <links>
+      <link rel="docs" href="https://tailwindui.com/components/application-ui/elements/badges"/>
+      <link rel="color-reference" href="https://tailwindcss.com/docs/customizing-colors"/>
+    </links>
+  </component>
+</prompt>

@@ -23,7 +23,7 @@ export function useFiles() {
   const [files, setFiles] = useState<AppFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<AppFile | null>(null);
 
-  const addFile = useCallback((file: { name: string; content: string; }) => {
+  const addFile = useCallback(async (file: { name: string; content: string; }) => {
     const parser = new LogParser();
     const events = parser.parse(file.content, 'auto');
     const eventsWithAnomaly = events.map(event => ({
@@ -31,6 +31,21 @@ export function useFiles() {
       anomalyLevel: getAnomalyLevel(event),
     }));
     const eventCount = eventsWithAnomaly.length;
+
+    // Send each event to the /api/add-event route
+    for (const event of eventsWithAnomaly) {
+      try {
+        await fetch('/api/add-event', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(event),
+        });
+      } catch (error) {
+        console.error('Failed to send event to /api/add-event:', error);
+      }
+    }
 
     const newFile: AppFile = {
       id: Date.now().toString(),

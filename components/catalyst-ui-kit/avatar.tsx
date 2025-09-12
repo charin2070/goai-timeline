@@ -10,6 +10,15 @@ type AvatarProps = {
   initials?: string
   alt?: string
   className?: string
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+}
+
+const sizes = {
+  xs: 'size-4',
+  sm: 'size-5',
+  md: 'size-6',
+  lg: 'size-7',
+  xl: 'size-8',
 }
 
 export function Avatar({
@@ -18,6 +27,7 @@ export function Avatar({
   initials,
   alt = '',
   className,
+  size = 'md',
   ...props
 }: AvatarProps & React.ComponentPropsWithoutRef<'span'>) {
   return (
@@ -26,6 +36,7 @@ export function Avatar({
       {...props}
       className={clsx(
         className,
+        sizes[size],
         // Basic layout
         'inline-grid shrink-0 align-middle [--avatar-radius:20%] *:col-start-1 *:row-start-1',
         'outline -outline-offset-1 outline-black/10 dark:outline-white/10',
@@ -45,7 +56,7 @@ export function Avatar({
           </text>
         </svg>
       )}
-      {src && <img className="size-full" src={src} alt={alt} />}
+      {src && <img className="size-full object-cover" src={src} alt={alt} />}
     </span>
   )
 }

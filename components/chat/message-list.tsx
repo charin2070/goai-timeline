@@ -35,7 +35,7 @@ export function MessageList({ messages, isTyping, onRepeatMessage, onEditMessage
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4 py-24">
             <p className="text-muted-foreground text-lg font-light">
-              Выберите лог-файлы и нажмите "Анализировать"
+              Добавьте лог-файлы
             </p>
           </div>
         ) : (

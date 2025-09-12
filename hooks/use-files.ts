@@ -1,42 +1,50 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { getFileType } from '@/lib/utils';
+import { LogParser, LogEvent } from '@/lib/log-parser';
+import { getAnomalyLevel } from '@/lib/anomaly';
 
 export interface AppFile {
-  id: string;
+  id: string; // Internal ID
+  type: string;
   name: string;
-  content: string;
+  description: string;
   originalContent: string;
-  os: string;
-  app: string;
-  server: string;
+  platform: string;
+  application: string;
+  service: string;
+  location: string;
+  eventCount: number;
+  events: LogEvent[];
 }
-
-const generatePamlContent = (file: Omit<AppFile, 'id' | 'content'>) => {
-  return `<poml>
-  <context>
-    <document src="${file.name}" os="${file.os}" app="${file.app}" server="${file.server}">
-      ${file.originalContent}
-    </document>
-  </context>
-</poml>`;
-};
 
 export function useFiles() {
   const [files, setFiles] = useState<AppFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<AppFile | null>(null);
 
-  const addFile = useCallback((file: Omit<AppFile, 'os' | 'app' | 'server' | 'content' | 'originalContent'> & { content: string }) => {
+  const addFile = useCallback((file: { name: string; content: string; }) => {
+    const parser = new LogParser();
+    const events = parser.parse(file.content, 'auto');
+    const eventsWithAnomaly = events.map(event => ({
+      ...event,
+      anomalyLevel: getAnomalyLevel(event),
+    }));
+    const eventCount = eventsWithAnomaly.length;
+
     const newFile: AppFile = {
-      ...file,
       id: Date.now().toString(),
+      name: file.name,
       originalContent: file.content,
-      content: '',
-      os: 'Linux',
-      app: '.NET application',
-      server: 'Backend'
+      type: getFileType(file.name),
+      description: 'User uploaded file',
+      platform: 'Linux',
+      application: '.NET application',
+      service: 'Backend',
+      location: 'Unknown',
+      eventCount: eventCount,
+      events: eventsWithAnomaly,
     };
-    newFile.content = generatePamlContent(newFile);
     setFiles(prev => [...prev, newFile]);
   }, []);
 
@@ -49,12 +57,10 @@ export function useFiles() {
     setSelectedFile(file);
   }, [files]);
 
-  const updateFile = useCallback((fileId: string, updates: Partial<Omit<AppFile, 'originalContent' | 'content'>>) => {
+  const updateFile = useCallback((fileId: string, updates: Partial<Omit<AppFile, 'originalContent' | 'id'>>) => {
     setFiles(prev => prev.map(file => {
       if (file.id === fileId) {
-        const updatedFile = { ...file, ...updates };
-        updatedFile.content = generatePamlContent(updatedFile);
-        return updatedFile;
+        return { ...file, ...updates };
       }
       return file;
     }));

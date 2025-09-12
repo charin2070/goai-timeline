@@ -73,22 +73,11 @@ const QueryPanel = forwardRef<QueryPanelRef, QueryPanelProps>(({ onSendMessage, 
       </div>
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-2">
-          <AttachDropdown
-            onLogFileUpload={onLogFileUpload}
-            onChatFileUpload={onChatFileUpload}
-            className="text-muted-foreground hover:text-foreground"
-          />
+          
           <Button variant="ghost" size="icon" onClick={onClearChat} className="text-muted-foreground hover:text-foreground">
             <Trash2 className="w-4 h-4" />
           </Button>
-          <AiProviderDropdown
-            selectedProvider={selectedProvider}
-            onProviderChange={changeProvider}
-            availableProviders={availableProviders}
-            compact={true}
-            showStatus={false}
-            className="w-40"
-          />
+          
         </div>
         <div className="flex flex-row items-end gap-1">
           <DropButton 

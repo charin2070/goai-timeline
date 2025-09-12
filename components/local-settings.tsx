@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { AiProviderDropdown } from './chat/ai-provider-dropdown';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,8 +29,11 @@ import {
   Trash2,
   RefreshCw,
   Save,
-  X
+  X,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
+import { DescriptionList, DescriptionTerm, DescriptionDetails } from '@/components/catalyst-ui-kit/description-list';
 import { AIProvider, AI_PROVIDERS } from '@/lib/types';
 import { useSettings } from '@/lib/settings-context';
 
@@ -60,6 +63,30 @@ interface SettingsState {
 
 export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
   const { systemPrompt, setSystemPrompt } = useSettings();
+  const [dbSettings, setDbSettings] = useState({
+    storageDbHost: '',
+    storageDbPort: '',
+  });
+
+  useEffect(() => {
+    const fetchDbSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const data = await response.json();
+          setDbSettings(data);
+        } else {
+          console.error('Failed to fetch db settings');
+        }
+      } catch (error) {
+        console.error('Error fetching db settings:', error);
+      }
+    };
+
+    if (isOpen) {
+      fetchDbSettings();
+    }
+  }, [isOpen]);
   const [settings, setSettings] = useState<SettingsState>({
     selectedProvider: 'google-gemma',
     temperature: 0.7,
@@ -81,6 +108,9 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
 
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('ai');
+  const [testStatus, setTestStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
+  const [testMessage, setTestMessage] = useState('');
+  const [testUrl, setTestUrl] = useState('');
 
   const updateSetting = useCallback(<K extends keyof SettingsState>(
     key: K, 
@@ -94,6 +124,29 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
     setSystemPrompt(value);
     setHasChanges(true);
   }
+
+  const handleTestConnection = async () => {
+    setTestStatus('pending');
+    setTestMessage('');
+    setTestUrl('');
+    try {
+      const response = await fetch('/api/db-test', { method: 'POST' });
+      const data = await response.json();
+      if (data.url) {
+        setTestUrl(data.url);
+      }
+      if (response.ok && data.success) {
+        setTestStatus('success');
+        setTestMessage(data.message);
+      } else {
+        setTestStatus('error');
+        setTestMessage(data.message || 'Connection failed.');
+      }
+    } catch (error) {
+      setTestStatus('error');
+      setTestMessage('An unexpected error occurred.');
+    }
+  };
 
   const handleProviderChange = useCallback((provider: AIProvider) => {
     updateSetting('selectedProvider', provider);
@@ -174,10 +227,7 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
               <Bot className="w-4 h-4" />
               <span className="hidden sm:inline">AI</span>
             </TabsTrigger>
-            <TabsTrigger value="systemPrompt" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
-              <Bot className="w-4 h-4" />
-              <span className="hidden sm:inline">Системный промпт</span>
-            </TabsTrigger>
+            
             <TabsTrigger value="interface" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
               <Palette className="w-4 h-4" />
               <span className="hidden sm:inline">Интерфейс</span>
@@ -188,7 +238,11 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
             </TabsTrigger>
             <TabsTrigger value="privacy" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
               <Shield className="w-4 h-4" />
-              <span className="hidden sm:inline">Приватность</span>
+              <span className="hidden sm:inline">Безопасность</span>
+            </TabsTrigger>
+            <TabsTrigger value="storage" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground">
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Данные</span>
             </TabsTrigger>
           </TabsList>
 
@@ -198,7 +252,7 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-foreground">
                   <Bot className="w-5 h-5" />
-                  Настройки ИИ
+                  Модель
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
                   Настройте поведение и параметры искусственного интеллекта
@@ -252,34 +306,31 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
                     </p>
                   </div>
                 </div>
+                <Separator className="bg-border" />
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* System Prompt Tab */}
-          <TabsContent value="systemPrompt" className="space-y-6 animate-in fade-in-0 duration-300">
             <Card className="bg-card text-card-foreground border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-foreground">
-                  <Bot className="w-5 h-5" />
-                  Системный промпт
-                </CardTitle>
-                <CardDescription className="text-muted-foreground">
-                  Базовые инструкции, которые определяют контекст AI.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Textarea
-                    value={systemPrompt}
-                    onChange={(e) => handleSystemPromptChange(e.target.value)}
-                    rows={15}
-                    placeholder="Введите инструкции для ИИ..."
-                    className="bg-input text-foreground border-border focus:ring-ring focus:border-primary"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-foreground">
+                      <Bot className="w-5 h-5" />
+                      Системный промпт
+                    </CardTitle>
+                    <CardDescription className="text-muted-foreground">
+                      Базовые инструкции, которые определяют контекст AI.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                      <Textarea
+                        value={systemPrompt}
+                        onChange={(e) => handleSystemPromptChange(e.target.value)}
+                        rows={15}
+                        placeholder="Введите инструкции для ИИ..."
+                        className="bg-input text-foreground border-border focus:ring-ring focus:border-primary"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
           </TabsContent>
 
           {/* Interface Settings Tab */}
@@ -497,6 +548,59 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
                       onCheckedChange={(checked) => updateSetting('preloadModels', checked)}
                     />
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Storage Tab */}
+          <TabsContent value="storage" className="space-y-6 animate-in fade-in-0 duration-300">
+            <Card className="bg-card text-card-foreground border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Download className="w-5 h-5" />
+                  База данных
+                </CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Настройки подключения
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <DescriptionList>
+                  <DescriptionTerm>STORAGE_DB_HOST</DescriptionTerm>
+                  <DescriptionDetails>
+                    {dbSettings.storageDbHost || 'не задано'}
+                  </DescriptionDetails>
+                  <DescriptionTerm>STORAGE_DB_PORT</DescriptionTerm>
+                  <DescriptionDetails>
+                    {dbSettings.storageDbPort || 'не задано'}
+                  </DescriptionDetails>
+                </DescriptionList>
+                <div className="mt-4 flex flex-col gap-4">
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="outline"
+                      onClick={handleTestConnection}
+                      disabled={testStatus === 'pending'}
+                    >
+                      {testStatus === 'pending' ? 'Тестирование...' : 'Тест подключения'}
+                    </Button>
+                    {testStatus !== 'idle' && testStatus !== 'pending' && (
+                      <div className="flex items-center gap-2">
+                        {testStatus === 'success' && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                        {testStatus === 'error' && <XCircle className="h-5 w-5 text-red-500" />}
+                        <span className={`text-sm ${testStatus === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                          {testMessage}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {(testStatus === 'pending' || testUrl) && (
+                    <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
+                      {testStatus === 'pending' && !testUrl && <div>Тестирование...</div>}
+                      {testUrl && <div className="break-all">URL: {testUrl}</div>}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

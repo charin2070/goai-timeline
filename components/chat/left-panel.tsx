@@ -1,12 +1,9 @@
 'use client';
 
-import { FileSidebar } from './file-sidebar';
-
 export function LeftPanel() {
   return (
-    <div className="flex flex-col h-full p-4 bg-background">
-      <h2 className="text-lg font-semibold mb-4">Логи</h2>
-      <FileSidebar />
+    <div className="flex flex-col h-full">
+      {/* This panel is intentionally left empty as its content has been moved to the center panel. */}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/catalyst-ui-kit/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/lib/auth-context';
 import { MessageCircle } from 'lucide-react';
@@ -71,6 +71,7 @@ export function SignIn() {
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-black-600 to-white-600 rounded-xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
             <Button
+              plain
               onClick={handleGoogleSignIn}
               disabled={isLoading}
               onMouseEnter={() => setIsHovered(true)}

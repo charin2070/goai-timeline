@@ -1,6 +1,7 @@
 // components/ui/modal.tsx
 import React from 'react';
 import { createPortal } from 'react-dom';
+import clsx from 'clsx';
 
 interface ModalProps {
   isOpen: boolean;
@@ -31,8 +32,6 @@ interface ModalBodyProps {
 const ModalBody: React.FC<ModalBodyProps> = ({ children }) => {
   return <div className="flex-1 overflow-y-auto p-6 bg-gray-50 min-h-[500px] transition-all duration-300 ease-in-out">{children}</div>;
 };
-
-import clsx from 'clsx';
 
 interface ModalFooterProps {
   children: React.ReactNode;

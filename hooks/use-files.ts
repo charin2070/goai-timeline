@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { getFileType } from '@/lib/utils';
-import { LogParser, LogEvent } from '@/lib/log-parser';
+import LogParser, { LogEvent } from '@/lib/log-parser';
 import { getAnomalyLevel } from '@/lib/anomaly';
 
 export interface AppFile {
@@ -24,7 +24,7 @@ export function useFiles() {
   const [selectedFile, setSelectedFile] = useState<AppFile | null>(null);
 
   const addFile = useCallback(async (file: { name: string; content: string; }) => {
-    const parser = new LogParser();
+    const parser = LogParser;
     const events = parser.parse(file.content, 'auto');
     const eventsWithAnomaly = events.map(event => ({
       ...event,

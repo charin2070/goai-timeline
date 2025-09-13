@@ -13,7 +13,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Event added successfully', event: newEvent, currentTotalEvents: globalEvents.length }, { status: 200 });
   } catch (error) {
     console.error('Error adding event:', error);
-    return NextResponse.json({ error: 'Failed to add event', details: error.message }, { status: 400 });
+    let errorMessage = 'An unknown error occurred';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    return NextResponse.json({ error: 'Failed to add event', details: errorMessage }, { status: 400 });
   }
 }
 

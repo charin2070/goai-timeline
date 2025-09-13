@@ -32,9 +32,9 @@ const pomlTemplate = `<SystemPrompt>
 const generateCombinedPoml = (files: AppFile[], query: string) => {
   const logs = files.map(file => 
     `  <Log>
-    <Platform>${file.os}</Platform>
-    <Application>${file.app}</Application>
-    <Server>${file.server}</Server>
+    <Platform>${file.platform}</Platform>
+    <Application>${file.application}</Application>
+    <Service>${file.service}</Service>
     <LogContent>
       ${file.originalContent}
     </LogContent>

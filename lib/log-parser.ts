@@ -1,341 +1,423 @@
-// LogParser.ts
-export type AnomalyLevel = 'high' | 'medium' | 'normal';
+// lib/log-parser.ts
+import crypto from "crypto";
 
-export interface LogEvent {
-  id?: string;
-  event_type: string | null;
-  source: string | null;
-  user_id: string | null;
-  payload: Record<string, any> | null;
-  status: string;
-  correlation_id: string | null;
-  created_at: string;
-  processed_at?: string | null;
-  host: string | null;
-  service: string | null;
-  business_process: string | null;
-  application: string | null;
-  anomalyLevel?: AnomalyLevel;
+export enum FilterLevel {
+  ALL = "all",
+  INFO = "info",
+  WARNING = "warning",
+  ERROR = "error",
+  CRITICAL = "critical"
 }
 
+/**
+ * Уровни аномалий, которые ожидает UI (event-viewer-modal).
+ */
+export enum AnomalyLevel {
+  NONE = "none",
+  INFO = "none",
+  HIGH = "high",
+  MEDIUM = "medium",
+  NORMAL = "normal",
+  ERROR = "high",
+  CRITICAL = "high",
+  WARNING = "warning"
+}
+
+/**
+ * severity (внутренний) — мапим в AnomalyLevel
+ */
+export type Severity = "debug" | "info" | "warning" | "error" | "critical";
+
+export interface LogEvent {
+  // базовые
+  id: string;
+  type: string;           // machine-friendly (например "message_stats.publish")
+  event_type?: string;    // legacy / UI-friendly (часто ждут именно event_type)
+  message: string;
+  severity: Severity;
+  anomalyLevel?: AnomalyLevel;
+
+  // временные метки / source
+  timestamp?: string;     // ISO
+  created_at?: string;    // иногда UI ожидает created_at
+  source?: { raw?: string; node?: string; file?: string; [k: string]: any };
+
+  // payload / данные
+  data?: Record<string, any>; // оригинальный объект
+  payload?: any;              // alias для compatibility
+
+  // дополнительные поля, которые UI запрашивал
+  status?: string;        // e.g. "ok" | "warning" | "failed"
+  host?: string;
+  service?: string;
+  application?: string;
+
+  // extensible
+  [k: string]: any;
+}
+
+/**
+ * Parser config (наиболее важные настройки вынесены)
+ */
+export interface ParserConfig {
+  maskFields?: string[];
+  thresholds?: {
+    messagesUnacknowledgedWarning?: number;
+    messagesUnacknowledgedCritical?: number;
+    dropUnroutableWarning?: number;
+    dropUnroutableCritical?: number;
+    publishRateWarning?: number;
+  };
+  emitEvents?: boolean;
+  maxDepth?: number;
+}
+
+/**
+ * Простой LogParser
+ */
 export class LogParser {
-  public parse(
-    logContent: string,
-    fileType: 'auto' | 'dotnet' | 'nginx' | 'rabbitmq' | 'generic' = 'auto'
-  ): LogEvent[] {
-    if (fileType === 'auto') {
-      fileType = this.detectFileType(logContent);
-    }
+  config: ParserConfig;
 
-    let events: LogEvent[] = [];
-    switch (fileType) {
-      case 'dotnet':
-        events = this.parseDotnetLog(logContent);
-        break;
-      case 'nginx':
-        console.warn('Nginx parser is not yet implemented.');
-        events = [];
-        break;
-      case 'rabbitmq':
-        events = this.parseRabbitMqLog(logContent);
-        break;
-      default:
-        events = this.parseGenericLog(logContent);
-        break;
-    }
-
-    const finalEvents: LogEvent[] = [];
-    for (const event of events) {
-      finalEvents.push(event);
-      if (event.payload && typeof event.payload.message === 'string') {
-        try {
-          const nestedPayload = JSON.parse(event.payload.message);
-          const logKeys = ['log', 'logs', 'message', 'data'];
-          for (const key of logKeys) {
-            if (nestedPayload[key] && typeof nestedPayload[key] === 'string') {
-              if (nestedPayload[key] !== logContent) {
-                const nestedEvents = this.parse(nestedPayload[key]);
-                finalEvents.push(...nestedEvents);
-              }
-            }
-          }
-        } catch (e) {
-          // Not a JSON string or malformed, so we ignore it.
-        }
-      }
-    }
-    
-    // New check for rawOperationalData
-    const eventsToProcessForOperationalData = [...finalEvents]; // Create a copy to avoid modifying while iterating
-    for (const event of eventsToProcessForOperationalData) {
-      if (event.payload && typeof event.payload.rawOperationalData === 'string') {
-        try {
-          const operationalDataEvents = this.getEventsFromOperationData(event.payload.rawOperationalData);
-          finalEvents.push(...operationalDataEvents);
-        } catch (e) {
-          console.error('Error parsing rawOperationalData:', e);
-        }
-      }
-    }
-
-    return finalEvents;
+  constructor(config?: Partial<ParserConfig>) {
+    this.config = {
+      maskFields: ["keyfile", "certfile", "cacertfile", "ip"],
+      thresholds: {
+        messagesUnacknowledgedWarning: 100,
+        messagesUnacknowledgedCritical: 1000,
+        dropUnroutableWarning: 10,
+        dropUnroutableCritical: 100,
+        publishRateWarning: 1000,
+      },
+      maxDepth: 10,
+      ...config,
+    };
   }
 
-  private detectFileType(logContent: string): 'dotnet' | 'nginx' | 'rabbitmq' | 'generic' {
-    if (logContent.includes('[Microsoft.Hosting.Lifetime]') || logContent.includes('System.Net.Http.HttpRequestException')) {
-      return 'dotnet';
-    }
-    if (logContent.includes('HTTP/1.1"') && (logContent.includes('client:') || logContent.includes('server:'))) {
-      return 'nginx';
-    }
-    if (logContent.includes('Problem name:') && logContent.includes('Operational data:')) {
-      return 'rabbitmq';
-    }
-    return 'generic';
-  }
-
-  private parseDotnetLog(logContent: string): LogEvent[] {
-    const lines = logContent.split('\n');
-    const events: LogEvent[] = [];
-    let currentEvent: LogEvent | null = null;
-
-    const regex = /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}) (INFO|ERROR|WARN|DEBUG) \[(.*?)\] \[(.*?)\] (.*)/;
-
-    for (const line of lines) {
-      const match = line.match(regex);
-
-      if (match) {
-        if (currentEvent) {
-          events.push(currentEvent);
-        }
-
-        const [, timestamp, level, component, threadId, message] = match;
-        currentEvent = {
-          created_at: new Date(timestamp).toISOString(),
-          event_type: level,
-          source: component,
-          payload: {
-            threadId,
-            message: message.trim(),
-          },
-          status: level === 'ERROR' ? 'error' : 'success',
-          host: null,
-          service: null,
-          application: 'dotnet',
-          user_id: null,
-          correlation_id: null,
-          business_process: null,
-        };
-      } else if (currentEvent && line.trim()) {
-        // продолжение (stacktrace)
-        currentEvent.payload!.message += '\n' + line.trim();
-      }
-    }
-
-    if (currentEvent) events.push(currentEvent);
-
-    return events;
-  }
-
-  private parseRabbitMqLog(logContent: string): LogEvent[] {
-    const events: LogEvent[] = [];
-
-    // Разбиваем на блоки "Problem ...", используя глобальный regex c dotAll
-    const problemBlockRegex = /Problem started at[^\n]*\n(?:[\s\S]*?)(?=(?:Problem started at\s|\z))/g;
-    const blocks = Array.from(logContent.matchAll(problemBlockRegex)).map(m => m[0]);
-
-    // Если не найдено блоков по шаблону — попытаемся взять весь контент как один блок
-    if (blocks.length === 0) {
-      blocks.push(logContent);
-    }
-
-    for (const block of blocks) {
-      // 1) created_at
-      let createdAt = new Date().toISOString();
-      const startedAtMatch = block.match(/Problem started at\s+(\d{2}:\d{2}:\d{2})\s+on\s+(\d{4}\.\d{2}\.\d{2})/i);
-      if (startedAtMatch) {
-        const time = startedAtMatch[1];
-        const date = startedAtMatch[2].replace(/\./g, '-'); // 2025-09-07
-        // ISO (UTC)
-        try {
-          createdAt = new Date(`${date}T${time}Z`).toISOString();
-        } catch {
-          createdAt = new Date().toISOString();
-        }
-      }
-
-      // 2) Problem name
-      const problemNameMatch = block.match(/Problem name:\s*(.*)/i);
-      const problemName = problemNameMatch ? problemNameMatch[1].trim() : null;
-
-      // 3) Severity
-      const severityMatch = block.match(/Severity:\s*(.*)/i);
-      const severityRaw = severityMatch ? severityMatch[1].trim() : null;
-      const severity = severityRaw ? severityRaw.toLowerCase() : 'unknown';
-
-      // 4) Host
-      const hostMatch = block.match(/Host:\s*(.*)/i);
-      const host = hostMatch ? (hostMatch[1].trim() === '' ? null : hostMatch[1].trim()) : null;
-
-      // 5) Original problem ID (если есть)
-      const originalIdMatch = block.match(/Original problem ID:\s*([0-9A-Za-z\-_]+)/i);
-      const originalProblemId = originalIdMatch ? originalIdMatch[1] : null;
-
-      // 6) Operational data JSON — аккуратный парсинг с подсчетом скобок
-      let operationalDataParsed: any = undefined;
-      let rawOperationalData: string | null = null;
-      const opIndex = block.search(/Operational data:\s*/i);
-      if (opIndex !== -1) {
-        // ищем первую '{' после Operational data:
-        const firstBrace = block.indexOf('{', opIndex);
-        if (firstBrace !== -1) {
-          let braceCount = 0;
-          let jsonEnd = -1;
-          for (let i = firstBrace; i < block.length; i++) {
-            const ch = block[i];
-            if (ch === '{') braceCount++;
-            else if (ch === '}') braceCount--;
-            if (braceCount === 0) {
-              jsonEnd = i;
-              break;
-            }
-          }
-          if (jsonEnd !== -1) {
-            rawOperationalData = block.slice(firstBrace, jsonEnd + 1);
-            // Попытка чистого парсинга (удаляем возможные control-символы)
-            try {
-              operationalDataParsed = JSON.parse(rawOperationalData.replace(/[\u0000-\u001F]+/g, ''));
-            } catch (err) {
-              // пробуем более "мягко" — убираем возможные обрывки в конце
-              try {
-                const maybeFixed = rawOperationalData.replace(/,\s*([}\]])/g, '$1'); // убираем висящие запятые
-                operationalDataParsed = JSON.parse(maybeFixed);
-              } catch {
-                operationalDataParsed = undefined;
-              }
-            }
-          } else {
-            // нет закрывающей скобки — сохраняем всё до конца блока как сырые данные
-            rawOperationalData = block.slice(firstBrace);
-            operationalDataParsed = undefined;
-          }
-        }
-      }
-
-      // 7) Формируем payload
-      const payload: Record<string, any> = {
-        problemName: problemName ?? undefined,
-        severity: severityRaw ?? undefined,
-      };
-      if (originalProblemId) payload.originalProblemId = originalProblemId;
-      if (operationalDataParsed !== undefined) payload.operationalData = operationalDataParsed;
-      if (operationalDataParsed === undefined && rawOperationalData) payload.rawOperationalData = rawOperationalData;
-
-      // 8) Собираем LogEvent
-      const event: LogEvent = {
-        created_at: createdAt,
-        event_type: problemName ?? `RabbitMQ:${severityRaw ?? 'UNKNOWN'}`, 
-        source: 'RabbitMQ Monitor',
-        payload,
-        status: severity === 'warning' ? 'warning' : severity === 'unknown' ? 'unknown' : 'error',
-        host,
-        service: 'RabbitMQ',
-        application: 'rabbitmq',
-        user_id: null,
-        correlation_id: originalProblemId ?? null,
-        business_process: null,
-      };
-
-      events.push(event);
-    }
-
-    return events;
-  }
-
-  private parseGenericLog(logContent: string): LogEvent[] {
-    return logContent
-      .split('\n')
-      .map(l => l.trim())
-      .filter(l => l.length > 0)
-      .map(line => {
-        const timestampMatch = line.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/)?.[0];
-        const createdAt = timestampMatch ?? new Date().toISOString();
-        const levelMatch = line.match(/(INFO|ERROR|WARN|DEBUG|FATAL|TRACE|NOTICE)/i);
-        const eventType = levelMatch ? levelMatch[0].toUpperCase() : 'UNKNOWN';
-        return {
-          event_type: eventType,
-          source: null,
-          user_id: null,
-          payload: { message: line },
-          status: 'success',
-          correlation_id: null,
-          created_at: createdAt,
-          processed_at: null,
-          host: null,
-          service: null,
-          business_process: null,
-          application: null,
-        } as LogEvent;
-      });
-  }
-
+  /**
+   * Точка входа: принимает строку operationDataString и возвращает LogEvent[]
+   */
   public getEventsFromOperationData(operationDataString: string): LogEvent[] {
-    const events: LogEvent[] = [];
+    let jsonString = operationDataString;
+    let parsedJsonSuccessfully = false;
 
-    let parsedData: Record<string, any>;
+    const opIndex = operationDataString.search(/Operational data:\s*/i);
+    if (opIndex !== -1) {
+      const firstBrace = operationDataString.indexOf('{', opIndex);
+      if (firstBrace !== -1) {
+        let braceCount = 0;
+        let jsonEnd = -1;
+        for (let i = firstBrace; i < operationDataString.length; i++) {
+          const ch = operationDataString[i];
+          if (ch === '{') braceCount++;
+          else if (ch === '}') braceCount--;
+          if (braceCount === 0) {
+            jsonEnd = i;
+            break;
+          }
+        }
+        if (jsonEnd !== -1) {
+          jsonString = operationDataString.slice(firstBrace, jsonEnd + 1);
+          const parsed = this.safeParseOperationData(jsonString);
+          if (!parsed.error) {
+            parsedJsonSuccessfully = true;
+            return this.getEventsFromOperationDataObj(parsed.value);
+          }
+        }
+      }
+    }
 
-    try {
-      parsedData = JSON.parse(operationDataString);
-    } catch (e) {
-      // If it's not valid JSON, treat the whole string as a message
-      events.push({
-        event_type: 'OperationData',
-        source: 'OperationDataParser',
-        user_id: null,
-        payload: { message: operationDataString },
-        status: 'info',
-        correlation_id: null,
-        created_at: new Date().toISOString(),
-        host: null,
-        service: null,
-        business_process: null,
-        application: null,
+    // If JSON extraction failed or was not found, try parsing as plain text lines
+    if (!parsedJsonSuccessfully) {
+      const events: LogEvent[] = [];
+      const lines = operationDataString.split(/\r?\n/);
+      lines.forEach(line => {
+        const parsedEvent = this.parseLogLine(line);
+        if (parsedEvent) {
+          events.push(parsedEvent);
+        } else if (line.trim() !== '') {
+          // If a line cannot be parsed by regex, treat it as a generic log message
+          events.push(this.makeEvent({
+            type: "log.message",
+            message: line,
+            severity: "info",
+            data: { rawLine: line },
+          }));
+        }
       });
       return events;
     }
 
-    // Create a base event from the parsed data
-    const baseEvent: LogEvent = {
-      event_type: parsedData.eventType || 'OperationData', // ERROR HERE
-      source: parsedData.source || 'OperationDataParser',
-      user_id: parsedData.userId || null,
-      payload: parsedData, // The entire parsed object is the payload
-      status: parsedData.status || 'info',
-      correlation_id: parsedData.correlationId || null,
-      created_at: parsedData.timestamp || new Date().toISOString(),
-      host: parsedData.host || null,
-      service: parsedData.service || null,
-      business_process: parsedData.businessProcess || null,
-      application: parsedData.application || null,
-    };
-    events.push(baseEvent);
+    // Fallback if something unexpected happens (should not be reached with the above logic)
+    return [this.makeEvent({
+      type: "parse.error",
+      message: "Unknown parsing error",
+      severity: "error",
+      data: { originalSnippet: operationDataString?.slice(0, 1000) },
+    })];
+  }
 
-    // Recursively parse nested log content if found
-    if (parsedData) {
-      const logKeys = ['log', 'logs', 'message', 'data']; // Keys that might contain nested logs
-      for (const key of logKeys) {
-        if (parsedData[key] && typeof parsedData[key] === 'string') {
-          try {
-            // Attempt to parse nested content as a log string
-            const nestedEvents = this.parse(parsedData[key]);
-            events.push(...nestedEvents);
-          } catch (e) {
-            // Not a parsable log string, ignore
-          }
+  /***********************
+   * Internal helpers
+   ***********************/
+  private makeEvent(partial: Partial<LogEvent>): LogEvent {
+    const severity = partial.severity || "info";
+    const anomalyLevel = this.mapSeverityToAnomaly(severity);
+    const msg = partial.message || "";
+    const id = partial.id || crypto.createHash("md5").update(msg + Date.now().toString()).digest("hex");
+    const timestamp = partial.timestamp || new Date().toISOString();
+
+    const ev: LogEvent = {
+      id,
+      type: partial.type || partial.event_type || "unknown",
+      event_type: partial.event_type || partial.type || "unknown",
+      message: msg,
+      severity,
+      anomalyLevel,
+      timestamp,
+      created_at: partial.created_at || timestamp,
+      source: partial.source,
+      data: partial.data,
+      payload: partial.payload ?? partial.data,
+      status: partial.status,
+      host: partial.host,
+      service: partial.service,
+      application: partial.application,
+      ...partial,
+    };
+    return ev;
+  }
+
+  private mapSeverityToAnomaly(s: Severity): AnomalyLevel {
+    switch (s) {
+      case "debug":
+      case "info":
+        return AnomalyLevel.INFO;
+      case "warning":
+        return AnomalyLevel.WARNING;
+      case "error":
+        return AnomalyLevel.ERROR;
+      case "critical":
+        return AnomalyLevel.CRITICAL;
+      default:
+        return AnomalyLevel.NONE;
+    }
+  }
+
+  public parse(content: string, mode: string = "auto"): LogEvent[] {
+  return this.getEventsFromOperationData(content);
+}
+
+  /**
+   * Основная логика: превращаем parsed object в LogEvent[]
+   */
+  private getEventsFromOperationDataObj(parsed: any): LogEvent[] {
+    const evts: LogEvent[] = [];
+
+    // system summary
+    if (parsed.product_name || parsed.product_version) {
+      evts.push(this.makeEvent({
+        type: "system.summary",
+        message: `${parsed.product_name || "product"} v${parsed.product_version || "?"}`,
+        severity: "info",
+        data: { product_name: parsed.product_name, product_version: parsed.product_version },
+        host: parsed.node,
+        service: parsed.product_name,
+        application: parsed.product_name,
+        source: { node: parsed.node },
+      }));
+    }
+
+    // message_stats -> детализируем
+    if (parsed.message_stats && typeof parsed.message_stats === "object") {
+      const ms = parsed.message_stats;
+      for (const [k, v] of Object.entries(ms)) {
+        if (k.endsWith("_details") && v && typeof v === "object") {
+          const rate = (v as any).rate;
+          evts.push(this.makeEvent({
+            type: `message_stats.${k}`,
+            message: `message_stats.${k} rate=${String(rate)}`,
+            severity: typeof rate === "number" && rate > (this.config.thresholds?.publishRateWarning || 1000) ? "warning" : "info",
+            data: { key: k, value: v },
+            payload: v,
+          }));
+        } else if (typeof v === "number") {
+          evts.push(this.makeEvent({
+            type: `message_stats.${k}`,
+            message: `message_stats.${k}=${v}`,
+            severity: "info",
+            data: { key: k, value: v },
+            payload: v,
+          }));
+        } else {
+          evts.push(this.makeEvent({
+            type: `message_stats.${k}`,
+            message: `message_stats.${k}`,
+            severity: "debug",
+            data: v as any,
+            payload: v,
+          }));
+        }
+      }
+
+      // quick anomaly: drop_unroutable
+      const du = (parsed.message_stats as any).drop_unroutable;
+      if (typeof du === "number") {
+        const sev: Severity = du >= (this.config.thresholds?.dropUnroutableCritical || 100) ? "critical" :
+                              du >= (this.config.thresholds?.dropUnroutableWarning || 10) ? "warning" : "info";
+        evts.push(this.makeEvent({
+          type: "anomaly.drop_unroutable",
+          message: `drop_unroutable=${du}`,
+          severity: sev,
+          data: { value: du },
+        }));
+      }
+    }
+
+    // queue_totals
+    if (parsed.queue_totals && typeof parsed.queue_totals === "object") {
+      const qt = parsed.queue_totals;
+      for (const [k, v] of Object.entries(qt)) {
+        if (k === "messages_unacknowledged" && typeof v === "number") {
+          const sev: Severity =
+            v >= (this.config.thresholds?.messagesUnacknowledgedCritical || 1000) ? "critical" :
+            v >= (this.config.thresholds?.messagesUnacknowledgedWarning || 100) ? "warning" : "info";
+          evts.push(this.makeEvent({
+            type: `queue_totals.${k}`,
+            message: `${k}=${v}`,
+            severity: sev,
+            data: { key: k, value: v },
+          }));
+        } else {
+          evts.push(this.makeEvent({
+            type: `queue_totals.${k}`,
+            message: `${k}=${String(v)}`,
+            severity: "info",
+            data: { key: k, value: v },
+          }));
         }
       }
     }
 
-    return events;
+    // listeners
+    if (Array.isArray(parsed.listeners)) {
+      parsed.listeners.forEach((l: any, idx: number) => {
+        evts.push(this.makeEvent({
+          type: `listener.${idx}`,
+          message: `listener ${l.protocol || "?"} ${l.ip_address || ""}:${l.port || ""}`,
+          severity: "debug",
+          data: l,
+        }));
+      });
+    }
+
+    // contexts
+    if (Array.isArray(parsed.contexts)) {
+      parsed.contexts.forEach((c: any, idx: number) => {
+        evts.push(this.makeEvent({
+          type: `context.${idx}`,
+          message: `context ${c.description || "?"} node=${c.node || "?"}`,
+          severity: "debug",
+          data: c,
+        }));
+      });
+    }
+
+    return evts;
+  }
+
+  private parseLogLine(line: string): LogEvent | null {
+    const logRegex = /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\s+([A-Z]+)\s+\[([^\]]+)\]\s+(.*)$/;
+    const match = line.match(logRegex);
+
+    if (!match) {
+      return null;
+    }
+
+    const [, timestampStr, levelStr, sourceStr, message] = match;
+
+    let severity: Severity = "info";
+    switch (levelStr.toLowerCase()) {
+      case "debug":
+        severity = "debug";
+        break;
+      case "info":
+        severity = "info";
+        break;
+      case "warn":
+      case "warning":
+        severity = "warning";
+        break;
+      case "error":
+        severity = "error";
+        break;
+      case "crit":
+      case "critical":
+        severity = "critical";
+        break;
+    }
+
+    return this.makeEvent({
+      type: "log.line",
+      event_type: "log.message",
+      message: message.trim(),
+      severity: severity,
+      timestamp: new Date(timestampStr).toISOString(),
+      source: { raw: sourceStr.trim() },
+      data: { rawLine: line },
+    });
+  }
+
+  /** Попытки "распаковать" вложенный JSON из поля message */
+  private safeParseOperationData(s: string): { error?: Error; value?: any } {
+    try {
+      const outer = JSON.parse(s);
+
+      // Case 1: outer.message is a string containing JSON (original assumption)
+      if (typeof outer.message === "string") {
+        const innerResult = this.tryParseNestedJsonString(outer.message);
+        if (innerResult.error) return { error: innerResult.error };
+        const merged = { ...outer, ...innerResult.value };
+        return { value: merged };
+      }
+      // Case 2: outer.message is already an object
+      else if (typeof outer.message === "object" && outer.message !== null) {
+        const merged = { ...outer, ...outer.message };
+        return { value: merged };
+      }
+      // Case 3: 's' itself is the operational data (i.e., no 'message' field, or 'message' is not a string/object)
+      else {
+        return { value: outer }; // Treat the outer object as the operational data
+      }
+    } catch (err) {
+      return { error: err as Error };
+    }
+  }
+
+  private tryParseNestedJsonString(s: string): { error?: Error; value?: any } {
+    // 1) прямой parse
+    try {
+      return { value: JSON.parse(s) };
+    } catch { /* continue */ }
+
+    // 2) unescape common sequences
+    try {
+      const unesc = s.replace(/\"/g, '"').replace(/\\n/g, "\n");
+      return { value: JSON.parse(unesc) };
+    } catch { /* continue */ }
+
+    // 3) extract first {...} block
+    const first = s.indexOf("{");
+    const last = s.lastIndexOf("}");
+    if (first >= 0 && last > first) {
+      try {
+        return { value: JSON.parse(s.slice(first, last + 1)) };
+      } catch (err) {
+        return { error: err as Error };
+      }
+    }
+
+    return { error: new Error("Cannot parse nested JSON in message") };
   }
 }
+
+export default new LogParser();

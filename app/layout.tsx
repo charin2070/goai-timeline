@@ -1,6 +1,6 @@
 import './globals.css';
 import 'prism-themes/themes/prism-vsc-dark-plus.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Providers } from '@/components/providers';
 import { ThemeProvider } from '@/lib/theme-context';
 
@@ -9,12 +9,17 @@ export const metadata: Metadata = {
   description: 'Events summarization and analysis',
   keywords: ['AI', 'chat', 'ChatGPT', 'OpenRouter', 'Mistral'],
   authors: [{ name: 'Charin' }],
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

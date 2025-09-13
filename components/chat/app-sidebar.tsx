@@ -21,10 +21,11 @@ import {
 import { Button } from '@/components/catalyst-ui-kit/button';
 import { Avatar } from '@/components/catalyst-ui-kit/avatar';
 import { useAuth } from '@/lib/auth-context';
-import { Settings, LogOut, ChevronDown, Bot, FileText, List, BarChart, Plus, Save } from 'lucide-react';
+import { Settings, LogOut, ChevronDown, FileText, List, BarChart, Plus, Save, Sun, Moon } from 'lucide-react';
 import { BoltIcon, FolderIcon, ArrowUpTrayIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
 import { Badge } from '@/components/catalyst-ui-kit/badge';
 import { LeftPanel } from './left-panel';
+import { useTheme } from '@/lib/theme-context';
 
 interface AppSidebarProps {
   onToggleSettings: () => void;
@@ -35,13 +36,18 @@ interface AppSidebarProps {
 
 export function AppSidebar({ onToggleSettings, onTabChange, onAddFileAction, fileCount }: AppSidebarProps) {
   const { session, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
     <Sidebar>
       <SidebarHeader>
         <Dropdown>
           <DropdownButton as={SidebarItem} className="mb-2.5">
-            <Bot className="w-6 h-6 text-primary" />
+            <img src="/logo-light.svg" alt="GoAI Timeline Logo" className="w-6 h-6" />
             <SidebarLabel>Инциденты</SidebarLabel>
             <ChevronDown />
           </DropdownButton>
@@ -63,16 +69,28 @@ export function AppSidebar({ onToggleSettings, onTabChange, onAddFileAction, fil
         <SidebarSection>
           <SidebarItem onClick={() => { onTabChange('files'); }}>
             <FolderIcon className="w-6 h-6" />
-            <SidebarLabel>Файлы</SidebarLabel>
+            <SidebarLabel>Данные</SidebarLabel>
             {fileCount > 0 && <Badge color="blue" className="ml-auto">{fileCount}</Badge>}
           </SidebarItem>
-          <SidebarItem onClick={() => { onTabChange('events'); }}>
-            <BoltIcon className="w-6 h-6" />
-            <SidebarLabel>События</SidebarLabel>
-            <Button plain onClick={(e: { stopPropagation: () => void; }) => { e.stopPropagation(); onAddFileAction(); }} className="ml-auto">
+          
+          {/* Fixed Events item - no nested button */}
+          <div className="relative group">
+            <SidebarItem onClick={() => { onTabChange('events'); }}>
+              <BoltIcon className="w-6 h-6" />
+              <SidebarLabel>События</SidebarLabel>
+            </SidebarItem>
+            <button
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                onAddFileAction(); 
+              }}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              aria-label="Add event"
+            >
               <PlusCircleIcon className="w-5 h-5" />
-            </Button>
-          </SidebarItem>
+            </button>
+          </div>
+
           <SidebarItem onClick={() => onTabChange('analysis')}>
             <BarChart className="w-6 h-6" />
             <SidebarLabel>Анализ</SidebarLabel>
@@ -85,22 +103,27 @@ export function AppSidebar({ onToggleSettings, onTabChange, onAddFileAction, fil
         <SidebarSpacer />
       </SidebarBody>
       <SidebarFooter className="flex items-center justify-between gap-2">
-        <Dropdown>
-          <DropdownButton as={Button} plain className="flex items-center gap-3 text-left px-2 py-1">
-            {session?.user?.image && <Avatar src={session.user.image} style={{ width: '2em', height: '2em' }} />}
-            <SidebarLabel>{session?.user?.name}</SidebarLabel>
-            <ChevronDown />
-          </DropdownButton>
-          <DropdownMenu className="min-w-64" anchor="top start">
-            <DropdownItem onClick={() => signOut()}>
-              <LogOut />
-              <DropdownLabel>Выйти</DropdownLabel>
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
-        <Button plain onClick={onToggleSettings}>
-          <Settings />
-        </Button>
+        <div className="flex items-center gap-2 w-full">
+          <Dropdown>
+            <DropdownButton as={Button} plain className="flex items-center justify-between w-full gap-3 text-left px-2 py-1">
+              {session?.user?.image && <Avatar src={session.user.image} style={{ width: '2em', height: '2em' }} />}
+              <SidebarLabel>{session?.user?.name}</SidebarLabel>
+              <ChevronDown />
+            </DropdownButton>
+            <DropdownMenu className="min-w-64" anchor="top start">
+              <DropdownItem onClick={() => signOut()}>
+                <LogOut />
+                <DropdownLabel>Выйти</DropdownLabel>
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+          <Button plain onClick={toggleTheme} title="Toggle theme">
+            {theme === 'dark' ? <Sun /> : <Moon />}
+          </Button>
+          <Button plain onClick={onToggleSettings} title="Settings">
+            <Settings />
+          </Button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

@@ -14,7 +14,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { Copy, PlusCircle, X, FileText, Image, Music, Terminal, AppWindow, Apple, Smartphone, Code, Server, Database, User, Globe, Monitor } from 'lucide-react';
+import { Copy, PlusCircle, X, FileText, Image, Music, Terminal, AppWindow, Apple, Smartphone, Code, Server, Database, User, Globe, Monitor, AlertCircle, AlertTriangle, ListFilter, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import {
@@ -31,12 +31,14 @@ import {
   DropdownMenu,
   DropdownItem,
   DropdownDivider,
+  DropdownLabel,
+  DropdownDescription,
 } from '@/components/catalyst-ui-kit/dropdown';
 import clsx from 'clsx';
 import { MessageList } from './message-list';
 import QueryPanel, { QueryPanelRef } from './query-panel';
 import { ChatMessage } from '@/lib/types';
-import { EventViewerContainer } from './event-viewer-container';
+import { EventViewerContainer, FilterLevel } from './event-viewer-container';
 import { LogEvent } from '@/lib/log-parser';
 
 interface CenterPanelProps {
@@ -97,6 +99,31 @@ export const CenterPanel = forwardRef<CenterPanelRef, CenterPanelProps>(({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryPanelRef = useRef<QueryPanelRef>(null);
   const [apiEvents, setApiEvents] = useState<LogEvent[]>([]);
+  const [selectedLevel, setSelectedLevel] = useState<FilterLevel>('all');
+
+  const levelDisplayNames: Record<FilterLevel, string> = {
+    all: 'Все',
+    error: 'ERROR',
+    warning: 'WARN',
+    critical: 'CRITICAL',
+    info: 'INFO',
+    anomalous: 'Аномальные',
+  };
+
+  const getSelectedLevelIcon = (level: FilterLevel) => {
+    switch (level) {
+      case 'error':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'warning':
+        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+      case 'all':
+        return <ListFilter className="w-4 h-4 text-blue-500" />;
+      case 'anomalous':
+        return <Zap className="w-4 h-4 text-purple-500" />;
+      default:
+        return null;
+    }
+  };
 
   useEffect(() => {
     const storedPrompt = localStorage.getItem("systemPrompt");
@@ -476,6 +503,37 @@ export const CenterPanel = forwardRef<CenterPanelRef, CenterPanelProps>(({
           <div className="flex flex-col h-full">
             <div className="flex justify-between items-center p-4">
               <h2 className="text-lg font-semibold">События</h2>
+              <Dropdown>
+                <DropdownButton outline>
+                  <div className="flex items-center gap-2">
+                    {getSelectedLevelIcon(selectedLevel)}
+                    {levelDisplayNames[selectedLevel]}
+                  </div>
+                </DropdownButton>
+                <DropdownMenu className="z-[60] min-w-56">
+                  <DropdownItem onClick={() => setSelectedLevel('error')}>
+                    <AlertCircle className="w-4 h-4 text-red-500 mr-3" />
+                    <DropdownLabel>ERROR</DropdownLabel>
+                    <DropdownDescription>События с явным указанием на ошибку</DropdownDescription>
+                  </DropdownItem>
+                  <DropdownItem onClick={() => setSelectedLevel('warning')}>
+                    <AlertTriangle className="w-4 h-4 text-yellow-500 mr-3" />
+                    <DropdownLabel>WARN</DropdownLabel>
+                    <DropdownDescription>События с уровнем логгирования "WARN"</DropdownDescription>
+                  </DropdownItem>
+                  <DropdownItem onClick={() => setSelectedLevel('all')}>
+                    <ListFilter className="w-4 h-4 text-blue-500 mr-3" />
+                    <DropdownLabel>Все</DropdownLabel>
+                    <DropdownDescription>Показать все события</DropdownDescription>
+                  </DropdownItem>
+                  <DropdownDivider />
+                  <DropdownItem onClick={() => setSelectedLevel('anomalous')}>
+                    <Zap className="w-4 h-4 text-purple-500 mr-3" />
+                    <DropdownLabel>Аномальные</DropdownLabel>
+                    <DropdownDescription>Не стандартные события</DropdownDescription>
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
             </div>
             <EventViewerContainer
               events={allEvents}
@@ -483,6 +541,8 @@ export const CenterPanel = forwardRef<CenterPanelRef, CenterPanelProps>(({
               getLanguage={getLanguage}
               getStyle={getStyle}
               displayedContent={displayedContent}
+              selectedLevel={selectedLevel}
+              setSelectedLevel={setSelectedLevel}
             />
           </div>
         </TabsContent>

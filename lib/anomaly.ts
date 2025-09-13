@@ -166,8 +166,8 @@ export function getAnomalyLevel(event: LogEvent): AnomalyLevel {
 
   // 4) Thresholds -> map to levels
   // Tune these thresholds as you collect real incidents.
-  if (score >= 6) return 'high';
-  if (score >= 3) return 'medium';
+  if (score >= 6) return AnomalyLevel.HIGH;
+  if (score >= 3) return AnomalyLevel.MEDIUM;
   console.log('Anomaly score:', score, '-> normal');
-  return 'normal';
+  return AnomalyLevel.NORMAL;
 }

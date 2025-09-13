@@ -1,3 +1,4 @@
+// components/chat/event-viewer-modal.tsx
 'use client';
 
 import { useState } from 'react';
@@ -35,7 +36,7 @@ interface EventViewerModalProps {
   onClose: () => void;
   events: LogEvent[];
   selectedFile: AppFile | null;
-  getLanguage: (fileName: string) => string;
+  getLanguage: (fileName: string) => string | null;
   getStyle: (fileName: string) => any; // Use any for now, as SyntaxHighlighterProps['style'] might be complex
   displayedContent: string;
 }
@@ -49,7 +50,15 @@ const levelDisplayNames: Record<FilterLevel, string> = {
   ANOMALOUS: 'Аномальные',
 };
 
-export function EventViewerModal({ isOpen, onClose, events, selectedFile, getLanguage, getStyle, displayedContent }: EventViewerModalProps) {
+export function EventViewerModal({
+  isOpen,
+  onClose,
+  events,
+  selectedFile,
+  getLanguage,
+  getStyle,
+  displayedContent,
+}: EventViewerModalProps) {
   const [selectedLevel, setSelectedLevel] = useState<FilterLevel>('ALL');
   const [activeTab, setActiveTab] = useState('events');
 
@@ -65,16 +74,14 @@ export function EventViewerModal({ isOpen, onClose, events, selectedFile, getLan
   };
 
   const getAnomalyLevelIndicator = (level: AnomalyLevel | undefined) => {
-    if (level === undefined) {
-      return null; // Handle undefined case
-    }
+    if (!level) return null;
     switch (level) {
-      case 'high':
-        return <div className="w-3 h-3 rounded-full bg-red-500"></div>;
-      case 'medium':
-        return <div className="w-3 h-3 rounded-full bg-yellow-500"></div>;
-      case 'normal':
-        return <div className="w-3 h-3 rounded-full bg-green-500"></div>;
+      case AnomalyLevel.HIGH:
+        return <div className="w-3 h-3 rounded-full bg-red-500" />;
+      case AnomalyLevel.MEDIUM:
+        return <div className="w-3 h-3 rounded-full bg-yellow-500" />;
+      case AnomalyLevel.NORMAL:
+        return <div className="w-3 h-3 rounded-full bg-green-500" />;
       default:
         return null;
     }
@@ -96,18 +103,17 @@ export function EventViewerModal({ isOpen, onClose, events, selectedFile, getLan
   };
 
   const getAnomalyHighlightClass = (level: AnomalyLevel | undefined) => {
-    if (level === 'high' || level === 'medium') {
+    if (level === AnomalyLevel.HIGH || level === AnomalyLevel.MEDIUM) {
       return 'text-red-500 font-semibold';
     }
     return '';
   };
 
-  const filteredEvents = events.filter(event => {
-    if (selectedLevel === 'ALL') {
-      return true;
-    }
+  const filteredEvents = events.filter((event) => {
+    if (selectedLevel === 'ALL') return true;
     if (selectedLevel === 'ANOMALOUS') {
-      return event.anomalyLevel !== 'normal';
+      // anomalous if not normal (use enum)
+      return event.anomalyLevel !== AnomalyLevel.NORMAL;
     }
     return event.event_type?.toUpperCase() === selectedLevel;
   });
@@ -118,7 +124,6 @@ export function EventViewerModal({ isOpen, onClose, events, selectedFile, getLan
         <Modal.Title>{selectedFile?.name || 'Event Timeline'}</Modal.Title>
         <div className="flex-grow flex justify-center">
           <Dropdown>
-            
             <DropdownButton outline>
               <div className="flex items-center gap-2">
                 {getSelectedLevelIcon(selectedLevel)}
@@ -156,12 +161,14 @@ export function EventViewerModal({ isOpen, onClose, events, selectedFile, getLan
           </button>
         </div>
       </Modal.Header>
+
       <Modal.Body>
         <Tabs defaultValue="events" className="flex flex-col h-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="events">События</TabsTrigger>
             <TabsTrigger value="logContent">Содержимое лога</TabsTrigger>
           </TabsList>
+
           <TabsContent value="events" className="flex-1 overflow-y-auto">
             <Accordion type="single" collapsible className="w-full">
               {filteredEvents.map((event, index) => (
@@ -170,28 +177,77 @@ export function EventViewerModal({ isOpen, onClose, events, selectedFile, getLan
                     <div className={clsx("flex items-center gap-4 w-full", getAnomalyHighlightClass(event.anomalyLevel))}>
                       {getAnomalyLevelIndicator(event.anomalyLevel)}
                       <time className="text-sm text-muted-foreground">
-                        {new Date(event.created_at).toLocaleTimeString()}
+                        {new Date(event.created_at ?? Date.now()).toLocaleTimeString()}
                       </time>
-                      <Badge variant={getEventTypeVariant(event.event_type)}>
-                        {event.event_type}
+                      <Badge variant={getEventTypeVariant(event.event_type ?? null)}>
+                        {event.event_type ?? 'unknown'}
                       </Badge>
-                      <span className="flex-1 text-left text-sm truncate ml-4">{JSON.stringify(event.payload?.message || '')}</span>
+                      <span className="flex-1 text-left text-sm truncate ml-4">
+                        {String(event.payload?.message ?? '')}
+                      </span>
                     </div>
                   </AccordionTrigger>
+
                   <AccordionContent>
                     <div className="space-y-2 p-4 text-sm">
-                      <div className="flex justify-between"><span>Time:</span><span>{new Date(event.created_at).toLocaleString()}</span></div>
-                      <div className="flex justify-between"><span>Type:</span><Badge variant={getEventTypeVariant(event.event_type)}>{event.event_type}</Badge></div>
-                      <div className="flex justify-between"><span>Anomaly Level:</span><span>{event.anomalyLevel}</span></div>
-                      {event.source && <div className="flex justify-between"><span>Source:</span><span>{event.source}</span></div>}
-                      <div className="flex justify-between"><span>Status:</span><span>{event.status}</span></div>
-                      {event.host && <div className="flex justify-between"><span>Host:</span><span>{event.host}</span></div>}
-                      {event.service && <div className="flex justify-between"><span>Service:</span><span>{event.service}</span></div>}
-                      {event.application && <div className="flex justify-between"><span>Application:</span><span>{event.application}</span></div>}
+                      <div className="flex justify-between">
+                        <span>Time:</span>
+                        <span>{new Date(event.created_at ?? Date.now()).toLocaleString()}</span>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span>Type:</span>
+                        <Badge variant={getEventTypeVariant(event.event_type ?? null)}>
+                          {event.event_type ?? 'unknown'}
+                        </Badge>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <span>Anomaly Level:</span>
+                        <span>{event.anomalyLevel ?? '—'}</span>
+                      </div>
+
+                      {event.source && (
+                        <div className="flex justify-between">
+                          <span>Source:</span>
+                          <span>
+                            {typeof event.source === 'string'
+                              ? event.source
+                              : event.source?.node ?? JSON.stringify(event.source)}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between">
+                        <span>Status:</span>
+                        <span>{event.status ?? '—'}</span>
+                      </div>
+
+                      {event.host && (
+                        <div className="flex justify-between">
+                          <span>Host:</span>
+                          <span>{event.host}</span>
+                        </div>
+                      )}
+
+                      {event.service && (
+                        <div className="flex justify-between">
+                          <span>Service:</span>
+                          <span>{event.service}</span>
+                        </div>
+                      )}
+
+                      {event.application && (
+                        <div className="flex justify-between">
+                          <span>Application:</span>
+                          <span>{event.application}</span>
+                        </div>
+                      )}
+
                       <div className="flex flex-col mt-2">
                         <span className="font-medium">Payload:</span>
                         <pre className="text-sm whitespace-pre-wrap break-all bg-muted p-4 rounded-lg mt-1">
-                          {JSON.stringify(event.payload, null, 2)}
+                          {JSON.stringify(event.payload ?? event.data ?? {}, null, 2)}
                         </pre>
                       </div>
                     </div>
@@ -200,14 +256,15 @@ export function EventViewerModal({ isOpen, onClose, events, selectedFile, getLan
               ))}
             </Accordion>
           </TabsContent>
+
           <TabsContent value="logContent" className="flex-1 overflow-y-auto">
             {selectedFile ? (
               <SyntaxHighlighter
-                language={getLanguage(selectedFile.name)}
+                language={getLanguage(selectedFile.name) ?? "undefined"}
                 style={getStyle(selectedFile.name)}
                 customStyle={{ background: 'transparent', width: '100%', height: '100%', textShadow: 'none' }}
                 wrapLines={true}
-                wrapLongLines={true}
+                wrapLongLines={true}  
               >
                 {displayedContent}
               </SyntaxHighlighter>

@@ -18,6 +18,8 @@ import {
   ResizableHandle,
 } from "@/components/ui/resizable";
 
+
+
 function ChatContent() {
   const { session, status, isLoading } = useAuth();
   const [pomlPrompt, setPomlPrompt] = useState('');

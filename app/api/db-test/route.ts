@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function POST() {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Perform a simple query to test the connection.
     // We use { head: true } to not retrieve data, just check for a successful response.

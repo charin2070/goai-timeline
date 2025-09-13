@@ -112,6 +112,11 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
   const [testMessage, setTestMessage] = useState('');
   const [testUrl, setTestUrl] = useState('');
 
+  const [aiTestStatus, setAiTestStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
+  const [aiTestMessage, setAiTestMessage] = useState('');
+  const [sentPrompt, setSentPrompt] = useState('');
+  const [sentModel, setSentModel] = useState('');
+
   const updateSetting = useCallback(<K extends keyof SettingsState>(
     key: K, 
     value: SettingsState[K]
@@ -145,6 +150,42 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
     } catch (error) {
       setTestStatus('error');
       setTestMessage('An unexpected error occurred.');
+    }
+  };
+
+  const handleTestAIConnection = async () => {
+    setAiTestStatus('pending');
+    setAiTestMessage('');
+    setSentPrompt('');
+    setSentModel('');
+    try {
+      const response = await fetch('/api/ai-test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: settings.selectedProvider,
+          temperature: settings.temperature,
+          maxTokens: settings.maxTokens,
+          // Add any other relevant AI settings here
+        }),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setAiTestStatus('success');
+        setAiTestMessage(data.message);
+        setSentPrompt(data.testPrompt || '');
+        setSentModel(data.modelUsed || '');
+      } else {
+        setAiTestStatus('error');
+        setAiTestMessage(data.message || 'AI test failed.');
+        setSentPrompt(data.testPrompt || '');
+        setSentModel(data.modelUsed || '');
+      }
+    } catch (error) {
+      setAiTestStatus('error');
+      setAiTestMessage('An unexpected error occurred during AI test.');
     }
   };
 
@@ -307,6 +348,43 @@ export function LocalSettings({ isOpen, onClose }: LocalSettingsProps) {
                   </div>
                 </div>
                 <Separator className="bg-border" />
+
+                <div className="mt-4 flex flex-col gap-4">
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="outline"
+                      onClick={handleTestAIConnection}
+                      disabled={aiTestStatus === 'pending'}
+                    >
+                      {aiTestStatus === 'pending' ? 'Тестирование AI...' : 'Тест AI'}
+                    </Button>
+                    {aiTestStatus !== 'idle' && aiTestStatus !== 'pending' && (
+                      <div className="flex items-center gap-2">
+                        {aiTestStatus === 'success' && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                        {aiTestStatus === 'error' && <XCircle className="h-5 w-5 text-red-500" />}
+                        <span className={`text-sm ${aiTestStatus === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                          {aiTestMessage}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {(aiTestStatus !== 'idle' && aiTestStatus !== 'pending') && (
+                    <div className="space-y-2 text-sm bg-muted p-3 rounded-md">
+                      {sentPrompt && (
+                        <div>
+                          <span className="font-medium">Отправленный промпт:</span>
+                          <p className="text-muted-foreground break-words">{sentPrompt}</p>
+                        </div>
+                      )}
+                      {sentModel && (
+                        <div>
+                          <span className="font-medium">Использованная модель:</span>
+                          <p className="text-muted-foreground">{sentModel}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
             <Card className="bg-card text-card-foreground border-border">
